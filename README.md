@@ -1,0 +1,111 @@
+# EngModem Mini
+
+A retro dial-up-modem-styled ESP32-S3 board: RS-232 (true DCE levels via
+MAX3237), a 24x2 character VFD status display, a microSD card slot, 8
+status LEDs, and USB-C, built around the ESP32-S3-WROOM-1U module. Runs
+[Zimodem](https://github.com/BoZimmerman/Zimodem) - Bo Zimmerman's Hayes
+AT-command modem emulator/internet gateway - via the
+[Zimodem-VFD](https://github.com/kd4cbm/Zimodem-VFD) fork, which adds the
+VFD status display this board uses.
+
+![Front](docs/board_front.svg)
+![Back](docs/board_back.svg)
+
+## ⚠️ Preliminary hardware disclaimer
+
+**This board has not been fabricated or bench-tested.** It has been
+verified in software only: schematic ERC, PCB DRC, footprint/schematic
+sync, and a full pin-by-pin cross-check against the firmware's actual
+GPIO usage all pass clean (see [Verification](#verification) below), but
+no physical unit has been built, powered on, or measured. Treat every
+net, footprint, and value here as a design-review-stage draft, not a
+validated reference design, until a real board has been assembled and
+tested. Expect revisions.
+
+## Special thanks
+
+This board exists to run [Bo Zimmerman](http://www.zimmers.net)'s
+[Zimodem](https://github.com/BoZimmerman/Zimodem) - the Hayes AT-command
+modem emulator this whole project is built around. None of this would
+have a reason to exist without that project. Thank you, Bo.
+
+## Board overview
+
+- ESP32-S3-WROOM-1U (external U.FL antenna), 16MB flash / 8MB octal PSRAM
+- MAX3237-based RS-232 level shifting, wired as **DCE** (straight-through
+  DE-9 cable to a PC/terminal) - full modem control set: TXD, RXD, RTS,
+  CTS, DTR, DSR, DCD, RI
+- Noritake CU24025ECPB-W1J 24x2 character VFD, direct 4-bit parallel
+  drive (no I2C bridge)
+- microSD card slot (Hirose DM3AT-SF-PEJM5), dedicated SPI pins
+- 8 status LEDs, including 3 direct-GPIO-driven (AA/HS/OH)
+- USB-C (native USB-Serial-JTAG)
+- 2-layer PCB, routed with [Freerouting](https://github.com/freerouting/freerouting) 2.3.0
+
+## Verification
+
+Every revision in this project's history was checked with KiCad's own
+tools before being carried forward:
+
+- **ERC**: 32/32 clean (no unsuppressed errors/warnings)
+- **DRC**: 1 finding, a pre-existing benign silkscreen-overlap warning on
+  U1; 0 unconnected nets
+- **Footprint/schematic sync**: clean
+- **Firmware/hardware cross-check**: every GPIO the firmware
+  (`Zimodem-VFD-Mini` fork, `ENGMODEM_MINI_BOARD` target) actually
+  references was traced against the schematic netlist pin-by-pin - 18/18
+  matched
+
+None of this substitutes for bringing up a real board - see the
+disclaimer above.
+
+## Prerequisite libraries
+
+This project uses two public third-party KiCad libraries that aren't
+bundled here - install both via KiCad's **Plugin and Content Manager**
+before opening the project:
+
+- **Espressif KiCad libraries** (`com_github_espressif_kicad-libraries`) -
+  ESP32-S3-WROOM-1U symbol/footprint
+- **MAX3237** - U1's symbol/footprint
+
+The project's one genuinely custom dependency, a small `RetroWiFiModem`
+library providing the 74HCT245 symbol and its SOIC-20W footprint, is
+bundled under [`hardware/kicad/libraries/`](hardware/kicad/libraries/)
+and wired up via the project-local `sym-lib-table`/`fp-lib-table`, so it
+resolves automatically - no separate install needed for that one.
+
+## RS-232 (J12) - DE-9 female, DCE pinout
+
+Standard DCE pinout - wire straight-through to a DTE (PC/terminal):
+
+| Pin | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 |
+|---|---|---|---|---|---|---|---|---|---|
+| Signal | DCD | RXD | TXD | DTR | GND | DSR | RTS | CTS | RI |
+
+## Files
+
+- [`hardware/kicad/`](hardware/kicad/) - full KiCad 10 project (schematic
+  + PCB), current as of **Rev4**
+- [`hardware/kicad/libraries/`](hardware/kicad/libraries/) - bundled
+  custom library (see [Prerequisite libraries](#prerequisite-libraries))
+
+Manufacturing outputs (Gerbers, BOM, CPL) aren't included yet - this
+upload is the KiCad project only.
+
+## Revision history
+
+| Rev | Notes |
+|---|---|
+| 0-1 | Original modular layout and placement baseline |
+| 2 | SD card socket swapped from a pin header to the real microSD socket (Hirose DM3AT-SF-PEJM5); full reroute |
+| 3 | Second SD placement experiment; full reroute; 69 net-derived pin-function silkscreen labels added across every header/LED footprint |
+| 4 | **Current** - dedicated 0.5mm net class for `/DC-IN`; solid (non-thermal-relief) zone connections on regulator/shield GND tabs; local `/VCC` copper pour + thermal vias around U5; ESP32 power-filter components (L1/C11/C12) relocated for shorter real routed-copper paths to U2 |
+
+## License
+
+Hardware design files (schematic, PCB) are released under
+[CERN-OHL-S v2](https://cern-ohl.web.cern.ch/) - a strongly-reciprocal
+open hardware license: modifications to these design files must be
+released under the same license if you distribute hardware built from
+them. See [LICENSE](LICENSE).

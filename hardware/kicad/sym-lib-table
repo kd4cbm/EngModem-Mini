@@ -1,0 +1,4 @@
+(sym_lib_table
+	(version 7)
+	(lib (name "RetroWiFiModem") (type "KiCad") (uri "${KIPRJMOD}/libraries/RetroWiFiModem/RetroWiFiModem.kicad_sym") (options "") (descr "Bundled with this project - provides the 74HCT245 symbol (extends 74LS245A)"))
+)
