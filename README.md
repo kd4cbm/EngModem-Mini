@@ -89,9 +89,25 @@ Standard DCE pinout - wire straight-through to a DTE (PC/terminal):
   + PCB), current as of **Rev4**
 - [`hardware/kicad/libraries/`](hardware/kicad/libraries/) - bundled
   custom library (see [Prerequisite libraries](#prerequisite-libraries))
+- [`manufacturing/Gerbers_EngModem-Mini_Rev4.zip`](manufacturing/Gerbers_EngModem-Mini_Rev4.zip) -
+  Gerber + Excellon drill files, ready to upload to a fab
+- [`manufacturing/BOM_PCBA_JLCPCB.csv`](manufacturing/BOM_PCBA_JLCPCB.csv) -
+  bill of materials for the SMD parts (JLCPCB assembly candidates), with
+  LCSC part numbers verified against LCSC's own listings where a specific
+  manufacturer part is called for. Common passives (resistors, most
+  capacitors) intentionally list full specs with no pinned LCSC number -
+  JLCPCB's basic-parts catalog is a live, dynamic search that isn't
+  reliably scriptable, and these are common enough values that matching
+  one at checkout takes seconds. **Verify current stock/pricing before
+  ordering** - in particular, U3's exact-match part was out of stock as of
+  the date noted in the file.
+- [`manufacturing/BOM_full.csv`](manufacturing/BOM_full.csv) - every part
+  on the board, including the through-hole connectors, headers, and LED
+  positions, for your own hand-assembly shopping list
 
-Manufacturing outputs (Gerbers, BOM, CPL) aren't included yet - this
-upload is the KiCad project only.
+No CPL (placement) file yet - add one before ordering full JLCPCB PCBA
+assembly; the Gerbers + BOM here are enough for a bare-board fab order or
+a hand-assembly build.
 
 ## Revision history
 

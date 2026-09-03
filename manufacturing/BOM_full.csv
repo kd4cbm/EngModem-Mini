@@ -1,0 +1,31 @@
+Designator,Value,Footprint,Assembly,Notes
+"C1,C2,C3,C4",0.22uF,C_0805_2012Metric,PCBA (SMD),See BOM_PCBA_JLCPCB.csv
+C5,0.1uF,C_0805_2012Metric,PCBA (SMD),See BOM_PCBA_JLCPCB.csv
+C6,0.33uF,C_0805_2012Metric,PCBA (SMD),See BOM_PCBA_JLCPCB.csv
+C7,0.1uF,C_0805_2012Metric,PCBA (SMD),See BOM_PCBA_JLCPCB.csv
+C8,10uF,C_1206_3216Metric,PCBA (SMD),See BOM_PCBA_JLCPCB.csv
+C9,10uF,C_0805_2012Metric,PCBA (SMD),See BOM_PCBA_JLCPCB.csv
+"C10,C12",1uF,C_0805_2012Metric,PCBA (SMD),See BOM_PCBA_JLCPCB.csv
+C11,10uF,C_0805_2012Metric,PCBA (SMD),See BOM_PCBA_JLCPCB.csv
+"D1,D2,D3,D4,D5,D6,D7,D8",LED,PinHeader_1x02_P2.54mm_Vertical,Hand-solder (THT),"2.54mm-pitch 2-pin THT footprint - populate with a standard 3mm or 5mm THT LED. Color/part not specified by the design; pick to taste. Series resistors already sized for AA/HS/OH (R6-R8, 330R) and the other 5 (R1-R5, 750R) - factor your chosen LED's forward voltage in if you deviate from a typical red/green/yellow LED."
+J1,VFD,PinHeader_2x07_P2.54mm_Vertical,Hand-solder (THT),"14-pin header to the Noritake CU24025ECPB-W1J VFD module"
+J3,DC_PWR_HEADER,PinHeader_1x02_P2.54mm_Vertical,Hand-solder (THT),DC input
+J4,MAX-ENCFG,PinHeader_1x03_P2.54mm_Vertical,Hand-solder (THT),MAX3237 receiver-enable jumper
+J5,MAX-SHDN,PinHeader_1x03_P2.54mm_Vertical,Hand-solder (THT),MAX3237 shutdown jumper
+J6,USB,PinHeader_1x06_P2.54mm_Vertical,Hand-solder (THT),USB-C signal breakout header
+J7,EXP,PinHeader_2x04_P2.54mm_Vertical,Hand-solder (THT),Expansion header (GPIO21/38/TXD/RXD)
+J8,MAX-MBAUD,PinHeader_1x03_P2.54mm_Vertical,Hand-solder (THT),MAX3237 megabaud-select jumper
+J9,ESP-BOOT,PinHeader_1x02_P2.54mm_Vertical,Hand-solder (THT),ESP32-S3 BOOT jumper
+J10,ESP-ENABLE,PinHeader_1x02_P2.54mm_Vertical,Hand-solder (THT),ESP32-S3 EN jumper
+J11,Micro_SD_Card,microSD_HC_Hirose_DM3AT-SF-PEJM5,PCBA (SMD),See BOM_PCBA_JLCPCB.csv
+J12,DB9,IDC-Header_2x05_P2.54mm_Vertical,Hand-solder (THT),"RS-232 DE-9 (DCE pinout) - 2x5 0.1in IDC-style header footprint; match to the specific DE-9 connector/adapter you intend to use, this was not sourced against a specific manufacturer part."
+L1,"DFE201210U-2R2M=P2 (2.2uH, 1.2A, 228mOhm)",L_0805_2012Metric,PCBA (SMD),See BOM_PCBA_JLCPCB.csv
+"R1,R2,R3,R4,R5",750R,R_0805_2012Metric,PCBA (SMD),See BOM_PCBA_JLCPCB.csv
+"R6,R7,R8",330R,R_0805_2012Metric,PCBA (SMD),See BOM_PCBA_JLCPCB.csv
+R9,10K,R_0805_2012Metric,PCBA (SMD),See BOM_PCBA_JLCPCB.csv
+R10,10K,R_0805_2012Metric,PCBA (SMD),See BOM_PCBA_JLCPCB.csv
+U1,MAX3237EIPWR,MAX3237:PW28,PCBA (SMD),See BOM_PCBA_JLCPCB.csv
+U2,ESP32-S3-WROOM-1U,PCM_Espressif:ESP32-S3-WROOM-1U,PCBA (SMD),See BOM_PCBA_JLCPCB.csv
+U3,LM7805S2/TR,TO-263-3_TabPin2,PCBA (SMD),See BOM_PCBA_JLCPCB.csv
+U4,74HCT245,RetroWiFiModem:SOIC-20W_7.5x12.8mm_P1.27mm,PCBA (SMD),See BOM_PCBA_JLCPCB.csv
+U5,LD1086D2T33TR,TO-263-3_TabPin2,PCBA (SMD),See BOM_PCBA_JLCPCB.csv
