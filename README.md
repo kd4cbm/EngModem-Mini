@@ -104,10 +104,22 @@ Standard DCE pinout - wire straight-through to a DTE (PC/terminal):
 - [`manufacturing/BOM_full.csv`](manufacturing/BOM_full.csv) - every part
   on the board, including the through-hole connectors, headers, and LED
   positions, for your own hand-assembly shopping list
+- [`manufacturing/CPL_SMD.csv`](manufacturing/CPL_SMD.csv) - placement
+  (component position) file for the SMD parts only, in JLCPCB's expected
+  column format (`Designator, Mid X, Mid Y, Layer, Rotation`), generated
+  directly from the PCB's real component coordinates
 
-No CPL (placement) file yet - add one before ordering full JLCPCB PCBA
-assembly; the Gerbers + BOM here are enough for a bare-board fab order or
-a hand-assembly build.
+Gerbers + BOM_PCBA_JLCPCB + CPL_SMD together are what JLCPCB's PCBA
+(assembly) order flow asks for. **Before ordering, check every SMD part's
+orientation in JLCPCB's assembly preview tool.** The rotation values in
+`CPL_SMD.csv` are correct in KiCad's own convention, but JLCPCB's preview
+uses whichever specific LCSC library part it matches your BOM row to,
+and that part's own 0° reference doesn't always agree with KiCad's -
+this is exactly the kind of mismatch that's easy to get wrong silently
+and only catches up with you as a reversed IC or backwards LED after
+assembly. Their preview UI lets you rotate a part and save the
+correction directly, no file regeneration needed - do that check first,
+especially for U1 (MAX3237EIPWR) and U2 (the ESP32 module).
 
 ## Revision history
 
