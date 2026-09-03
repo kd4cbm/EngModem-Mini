@@ -8,8 +8,8 @@ AT-command modem emulator/internet gateway - via the
 [Zimodem-VFD](https://github.com/kd4cbm/Zimodem-VFD) fork, which adds the
 VFD status display this board uses.
 
-![Front](docs/board_front.svg)
-![Back](docs/board_back.svg)
+![Front](docs/board_front.png)
+![Back](docs/board_back.png)
 
 ## ⚠️ Preliminary hardware disclaimer
 
