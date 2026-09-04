@@ -92,34 +92,52 @@ Standard DCE pinout - wire straight-through to a DTE (PC/terminal):
 - [`manufacturing/Gerbers_EngModem-Mini_Rev4.zip`](manufacturing/Gerbers_EngModem-Mini_Rev4.zip) -
   Gerber + Excellon drill files, ready to upload to a fab
 - [`manufacturing/BOM_PCBA_JLCPCB.csv`](manufacturing/BOM_PCBA_JLCPCB.csv) -
-  bill of materials for the SMD parts (JLCPCB assembly candidates), with
-  LCSC part numbers verified against LCSC's own listings where a specific
+  bill of materials for the SMD parts JLCPCB will assemble, with LCSC part
+  numbers verified against LCSC's own listings where a specific
   manufacturer part is called for. Common passives (resistors, most
   capacitors) intentionally list full specs with no pinned LCSC number -
   JLCPCB's basic-parts catalog is a live, dynamic search that isn't
   reliably scriptable, and these are common enough values that matching
-  one at checkout takes seconds. **Verify current stock/pricing before
-  ordering** - in particular, U3's exact-match part was out of stock as of
-  the date noted in the file.
+  one at checkout takes seconds. **U3 and U5 are intentionally excluded**
+  - see below.
 - [`manufacturing/BOM_full.csv`](manufacturing/BOM_full.csv) - every part
-  on the board, including the through-hole connectors, headers, and LED
-  positions, for your own hand-assembly shopping list
+  on the board, including the through-hole connectors, headers, LED
+  positions, and U3/U5, for your own hand-assembly shopping list
 - [`manufacturing/CPL_SMD.csv`](manufacturing/CPL_SMD.csv) - placement
-  (component position) file for the SMD parts only, in JLCPCB's expected
-  column format (`Designator, Mid X, Mid Y, Layer, Rotation`), generated
-  directly from the PCB's real component coordinates
+  (component position) file for the JLCPCB-assembled SMD parts, in
+  JLCPCB's expected column format (`Designator, Mid X, Mid Y, Layer,
+  Rotation`), generated directly from the PCB's real component
+  coordinates. U3 and U5 excluded, same as the PCBA BOM.
 
 Gerbers + BOM_PCBA_JLCPCB + CPL_SMD together are what JLCPCB's PCBA
 (assembly) order flow asks for. **Before ordering, check every SMD part's
-orientation in JLCPCB's assembly preview tool.** The rotation values in
-`CPL_SMD.csv` are correct in KiCad's own convention, but JLCPCB's preview
-uses whichever specific LCSC library part it matches your BOM row to,
-and that part's own 0° reference doesn't always agree with KiCad's -
-this is exactly the kind of mismatch that's easy to get wrong silently
-and only catches up with you as a reversed IC or backwards LED after
-assembly. Their preview UI lets you rotate a part and save the
-correction directly, no file regeneration needed - do that check first,
-especially for U1 (MAX3237EIPWR) and U2 (the ESP32 module).
+orientation and position in JLCPCB's assembly preview tool** - their
+preview renders whichever specific LCSC library part it matched to each
+BOM row, using that part's own reference point, which doesn't always
+agree with KiCad's footprint origin (for angle *or* position). Their
+preview UI lets you nudge/rotate a part and save the correction directly,
+no file regeneration needed - do that check first, especially for U1
+(MAX3237EIPWR) and U2 (the ESP32 module).
+
+### U3 and U5 - excluded from PCBA, hand-solder these
+
+JLCPCB's placement preview surfaced a real footprint mismatch on both
+regulators: the originally spec'd parts (HGSEMI LM7805S2/TR for U3, ST
+LD1086D2T33TR for U5) don't reliably match this board's 3-lead D2PAK/
+TO-263-3 footprint - LCSC's own listings show both as 2-lead packages
+(and JLCPCB's 3D model for U3 shows "TO263-5" case marking), while ST's
+LD1086 datasheet itself defines two different D²PAK mechanical variants
+under one ambiguous order code. Rather than risk a bad PCBA placement,
+both are DNP for JLCPCB assembly - `BOM_full.csv` lists verified
+replacement parts to hand-solder instead, sourced from Mouser/DigiKey:
+
+- **U3**: onsemi **MC7805CD2TR4G** (D2PAK-3, CASE 936) - confirmed via
+  onsemi's own MC7800 datasheet: Pin 1=Input, Pin 2=Ground=Tab, Pin
+  3=Output, an exact match to this footprint and the schematic.
+- **U5**: TI **LM1086CSX-3.3/NOPB** (DDPAK/TO-263, package KTT) -
+  confirmed via TI's own datasheet: Pin 1=ADJ/GND, Pin 2+Tab=Output, Pin
+  3=Input, an exact match to this footprint and the schematic (tab wired
+  to Output by design).
 
 ## Revision history
 

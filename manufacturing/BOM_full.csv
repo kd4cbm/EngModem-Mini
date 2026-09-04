@@ -26,6 +26,6 @@ R9,10K,R_0805_2012Metric,PCBA (SMD),See BOM_PCBA_JLCPCB.csv
 R10,10K,R_0805_2012Metric,PCBA (SMD),See BOM_PCBA_JLCPCB.csv
 U1,MAX3237EIPWR,MAX3237:PW28,PCBA (SMD),See BOM_PCBA_JLCPCB.csv
 U2,ESP32-S3-WROOM-1U,PCM_Espressif:ESP32-S3-WROOM-1U,PCBA (SMD),See BOM_PCBA_JLCPCB.csv
-U3,LM7805S2/TR,TO-263-3_TabPin2,PCBA (SMD),See BOM_PCBA_JLCPCB.csv
+U3,MC7805CD2TR4G,TO-263-3_TabPin2,"Hand-solder (SMD, excluded from PCBA)","Originally spec'd as HGSEMI LM7805S2/TR (C2902505); excluded from PCBA after JLCPCB's placement preview showed a footprint mismatch (LCSC lists that part as TO-263-2, JLCPCB's 3D model shows TO263-5 case marking - neither is the 3-lead D2PAK this footprint expects). Replaced with onsemi MC7805CD2TR4G (D2PAK-3, CASE 936, Tape&Reel), verified against onsemi's own MC7800 datasheet: Pin1=Input, Pin2=Ground=Tab, Pin3=Output - exact match to this footprint and the schematic's pin assignment. Order from Mouser/DigiKey."
 U4,74HCT245,RetroWiFiModem:SOIC-20W_7.5x12.8mm_P1.27mm,PCBA (SMD),See BOM_PCBA_JLCPCB.csv
-U5,LD1086D2T33TR,TO-263-3_TabPin2,PCBA (SMD),See BOM_PCBA_JLCPCB.csv
+U5,LM1086CSX-3.3/NOPB,TO-263-3_TabPin2,"Hand-solder (SMD, excluded from PCBA)","Originally spec'd as STMicroelectronics LD1086D2T33TR (C7915); excluded from PCBA after JLCPCB's placement preview showed a footprint mismatch (ST's own datasheet defines two different D2PAK mechanical variants - 2-lead and 3-lead - under one ambiguous order code, and LCSC/JLCPCB list this exact part as TO-263-2). Replaced with TI LM1086CSX-3.3/NOPB (DDPAK/TO-263, package KTT, Tape&Reel), verified against TI's own datasheet: Pin1=ADJ/GND, Pin2+Tab=Output, Pin3=Input - exact match to this footprint and the schematic's pin assignment (tab wired to Output). Order from Mouser/DigiKey."
