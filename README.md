@@ -83,6 +83,10 @@ Standard DCE pinout - wire straight-through to a DTE (PC/terminal):
 |---|---|---|---|---|---|---|---|---|---|
 | Signal | DCD | RXD | TXD | DTR | GND | DSR | RTS | CTS | RI |
 
+Full connector/power-regulation detail (including the U3/U5 substitution
+below) is in [`PIN_MAP.md`](PIN_MAP.md); a running changelog is in
+[`CHANGES.md`](CHANGES.md).
+
 ## Files
 
 - [`hardware/kicad/`](hardware/kicad/) - full KiCad 10 project (schematic
