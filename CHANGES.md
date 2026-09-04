@@ -4,6 +4,34 @@ Hardware-side changelog for EngModem Mini. For firmware changes, see the
 [Zimodem-VFD-Mini](https://github.com/kd4cbm/Zimodem-VFD-Mini) repo's own
 `CHANGES.md`.
 
+## Rev5: U2 ground-pad via stitching + enclosure jigs
+
+**Hand-solder access for U2's ground pad.** The ESP32-S3-WROOM-1U's
+ground/shield pad (a 3x3 cluster of small SMD pads under the module) had
+no via or bottom-layer copper connecting it to the board's back side,
+making it inaccessible for hot-air rework from below. Added 9 through
+vias under the cluster, exposed copper (untented) on the back, and a
+matching set of full-size pads mirrored onto the bottom layer so the
+back has the same solderable footprint as the top - not just a bare
+via, an actual usable pad for hand-soldering heat/solder access. A
+keepout zone protects the cluster from future routing, and the board
+was fully rerouted with it in place (a genuine Freerouting GUI crash
+triggered by the board's existing copper pours, unrelated to the new
+keepout, was root-caused and worked around along the way - routed with
+the pours temporarily stripped from the DSN export, then refilled
+after import).
+
+**U3/U5 excluded from JLCPCB PCBA**, replacements verified against each
+manufacturer's own datasheet - see [README.md](README.md#u3-and-u5---excluded-from-pcba-hand-solder-these)
+for the full detail.
+
+**Enclosure panel jigs added** (`enclosure/`) - 3D-printable drill and
+router-template guides for the Hammond 1455U2201BK front and rear
+panels (VFD window, LED holes, VFD mounting holes, and a draft DB9
+cutout). See [`enclosure/README.md`](enclosure/README.md) for the full
+writeup and its own preliminary-hardware disclaimer - these haven't
+been printed or fitted to real hardware yet.
+
 ## Manufacturing outputs: U3/U5 regulator substitution
 
 JLCPCB's PCBA placement preview surfaced a real footprint mismatch on

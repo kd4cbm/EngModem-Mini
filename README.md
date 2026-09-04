@@ -90,10 +90,14 @@ below) is in [`PIN_MAP.md`](PIN_MAP.md); a running changelog is in
 ## Files
 
 - [`hardware/kicad/`](hardware/kicad/) - full KiCad 10 project (schematic
-  + PCB), current as of **Rev4**
+  + PCB), current as of **Rev5**
 - [`hardware/kicad/libraries/`](hardware/kicad/libraries/) - bundled
   custom library (see [Prerequisite libraries](#prerequisite-libraries))
-- [`manufacturing/Gerbers_EngModem-Mini_Rev4.zip`](manufacturing/Gerbers_EngModem-Mini_Rev4.zip) -
+- [`enclosure/`](enclosure/) - Hammond 1455U2201BK panel drill/router jigs
+  (VFD window, LEDs, mounting holes, DB9 draft) - see its own
+  [README](enclosure/README.md) for the preliminary-hardware disclaimer
+  and usage instructions
+- [`manufacturing/Gerbers_EngModem-Mini_Rev5.zip`](manufacturing/Gerbers_EngModem-Mini_Rev5.zip) -
   Gerber + Excellon drill files, ready to upload to a fab
 - [`manufacturing/BOM_PCBA_JLCPCB.csv`](manufacturing/BOM_PCBA_JLCPCB.csv) -
   bill of materials for the SMD parts JLCPCB will assemble, with LCSC part
@@ -150,7 +154,8 @@ replacement parts to hand-solder instead, sourced from Mouser/DigiKey:
 | 0-1 | Original modular layout and placement baseline |
 | 2 | SD card socket swapped from a pin header to the real microSD socket (Hirose DM3AT-SF-PEJM5); full reroute |
 | 3 | Second SD placement experiment; full reroute; 69 net-derived pin-function silkscreen labels added across every header/LED footprint |
-| 4 | **Current** - dedicated 0.5mm net class for `/DC-IN`; solid (non-thermal-relief) zone connections on regulator/shield GND tabs; local `/VCC` copper pour + thermal vias around U5; ESP32 power-filter components (L1/C11/C12) relocated for shorter real routed-copper paths to U2 |
+| 4 | Dedicated 0.5mm net class for `/DC-IN`; solid (non-thermal-relief) zone connections on regulator/shield GND tabs; local `/VCC` copper pour + thermal vias around U5; ESP32 power-filter components (L1/C11/C12) relocated for shorter real routed-copper paths to U2 |
+| 5 | **Current** - via stitching added under U2's ground-pad cluster (9 vias, exposed copper + matching pads mirrored onto the bottom layer) for bottom-side hand-soldering access; keepout zone added around that cluster, full rip/reroute; U3/U5 excluded from PCBA per the footprint mismatch below |
 
 ## License
 
