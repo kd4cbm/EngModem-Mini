@@ -94,7 +94,8 @@ below) is in [`PIN_MAP.md`](PIN_MAP.md); a running changelog is in
 - [`hardware/kicad/libraries/`](hardware/kicad/libraries/) - bundled
   custom library (see [Prerequisite libraries](#prerequisite-libraries))
 - [`enclosure/`](enclosure/) - Hammond 1455U2201BK panel drill/router jigs
-  (VFD window, LEDs, mounting holes, DB9 draft) - see its own
+  (front: VFD window, LEDs, mounting holes; rear: DB9, USB-C, power
+  jack/switch, boot/reset, external antenna) - see its own
   [README](enclosure/README.md) for the preliminary-hardware disclaimer
   and usage instructions
 - [`manufacturing/Gerbers_EngModem-Mini_Rev5.zip`](manufacturing/Gerbers_EngModem-Mini_Rev5.zip) -
