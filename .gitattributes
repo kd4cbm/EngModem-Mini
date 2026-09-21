@@ -1,0 +1,8 @@
+# Line-ending rules.
+#
+# The release checksum file must stay LF on every OS, otherwise a Windows
+# checkout (core.autocrlf=true) turns it into CRLF and 'sha256sum -c' fails.
+firmware/bin/SHA256SUMS.txt text eol=lf
+
+# Firmware binaries must never be modified by line-ending conversion.
+*.bin binary
