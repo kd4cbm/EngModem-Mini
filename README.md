@@ -6,21 +6,36 @@ status LEDs, and USB-C, built around the ESP32-S3-WROOM-1U module. Runs
 [Zimodem](https://github.com/BoZimmerman/Zimodem) - Bo Zimmerman's Hayes
 AT-command modem emulator/internet gateway - via the
 [Zimodem-VFD](https://github.com/kd4cbm/Zimodem-VFD) fork, which adds the
-VFD status display this board uses.
+VFD status display this board uses. The firmware qualified on this exact
+hardware, further specialised for it, is included in [`firmware/`](firmware/).
 
 ![Front](docs/board_front.png)
 ![Back](docs/board_back.png)
 
-## ⚠️ Preliminary hardware disclaimer
+## Status: Rev5 built and functionally qualified
 
-**This board has not been fabricated or bench-tested.** It has been
-verified in software only: schematic ERC, PCB DRC, footprint/schematic
-sync, and a full pin-by-pin cross-check against the firmware's actual
-GPIO usage all pass clean (see [Verification](#verification) below), but
-no physical unit has been built, powered on, or measured. Treat every
-net, footprint, and value here as a design-review-stage draft, not a
-validated reference design, until a real board has been assembled and
-tested. Expect revisions.
+One Rev5 board has been built, brought up and bench-qualified with the firmware
+in [`firmware/`](firmware/) (revision `firmware-v4-rev1`), September 2026:
+programming over USB, boot and debug UART, WiFi, microSD, the VFD, the status
+LEDs, RS-232 at every rate from 300 to 921600 baud, RTS/CTS flow control, DTR,
+DCD and RI, and byte-exact data integrity through TCP connections. The full
+results - and, just as importantly, **what was not tested** (no rail-voltage or
+signal-level measurements, single unit, no long soak, no ESD/EMC) - are in
+[`docs/QUALIFICATION.md`](docs/QUALIFICATION.md).
+
+Bring-up turned up a few things worth knowing **before you build one**:
+
+- **J12's pin order does not match most ready-made header-to-DE-9 cables** and
+  the board will appear dead with one - see [`docs/J12_CABLE_GUIDE.md`](docs/J12_CABLE_GUIDE.md).
+- **Three MAX3237 jumpers (J4/J5/J8) must be fitted** - see the jumper table in
+  [`docs/BRING_UP.md`](docs/BRING_UP.md#3-set-the-jumpers).
+- U3/U5 are hand-soldered and U5 was substituted - see [`docs/ERRATA.md`](docs/ERRATA.md).
+- The design-stage "all pins match the firmware" check missed signal direction;
+  five firmware defects were found and fixed during qualification (none needed
+  a board change) - see [`docs/ERRATA.md`](docs/ERRATA.md#e3-earlier-pin-cross-check-missed-signal-direction).
+
+This is a functional qualification of a single unit, not a compliance test.
+Expect further revisions.
 
 ## Special thanks
 
@@ -44,20 +59,22 @@ have a reason to exist without that project. Thank you, Bo.
 
 ## Verification
 
-Every revision in this project's history was checked with KiCad's own
-tools before being carried forward:
+**Design checks** - every revision was checked with KiCad's own tools before
+being carried forward:
 
 - **ERC**: 32/32 clean (no unsuppressed errors/warnings)
 - **DRC**: 1 finding, a pre-existing benign silkscreen-overlap warning on
   U1; 0 unconnected nets
 - **Footprint/schematic sync**: clean
-- **Firmware/hardware cross-check**: every GPIO the firmware
-  (`Zimodem-VFD-Mini` fork, `ENGMODEM_MINI_BOARD` target) actually
+- **Firmware/hardware cross-check (design stage)**: every GPIO the firmware
   references was traced against the schematic netlist pin-by-pin - 18/18
-  matched
+  matched **by GPIO number and net name**. That check did not compare signal
+  *direction* and so missed a reversed RTS/CTS assignment, found later on the
+  real board and fixed in the firmware; see
+  [`docs/ERRATA.md`](docs/ERRATA.md#e3-earlier-pin-cross-check-missed-signal-direction).
 
-None of this substitutes for bringing up a real board - see the
-disclaimer above.
+**Hardware qualification** - a real Rev5 board, tested on the bench with the
+included firmware: [`docs/QUALIFICATION.md`](docs/QUALIFICATION.md).
 
 ## Prerequisite libraries
 
@@ -77,7 +94,10 @@ resolves automatically - no separate install needed for that one.
 
 ## RS-232 (J12) - DE-9 female, DCE pinout
 
-Standard DCE pinout - wire straight-through to a DTE (PC/terminal):
+DCE pinout in the **AT/Everex header order** (header pin *n* = DE-9 pin *n*) -
+wire straight-through to a DTE (PC/terminal). **Many ready-made header-to-DE-9
+cables use a different (DTK/Intel) order and will not work** - read
+[`docs/J12_CABLE_GUIDE.md`](docs/J12_CABLE_GUIDE.md):
 
 | Pin | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 |
 |---|---|---|---|---|---|---|---|---|---|
@@ -89,6 +109,14 @@ below) is in [`PIN_MAP.md`](PIN_MAP.md); a running changelog is in
 
 ## Files
 
+- [`firmware/`](firmware/) - the qualified firmware: source, prebuilt
+  binaries with checksums, and the hardware QA test scripts (start with its
+  [README](firmware/README.md))
+- [`docs/`](docs/) - [`BRING_UP.md`](docs/BRING_UP.md) (builder's guide:
+  jumpers, first power, flashing, troubleshooting),
+  [`QUALIFICATION.md`](docs/QUALIFICATION.md) (test report),
+  [`ERRATA.md`](docs/ERRATA.md) (known issues),
+  [`J12_CABLE_GUIDE.md`](docs/J12_CABLE_GUIDE.md) (cabling)
 - [`hardware/kicad/`](hardware/kicad/) - full KiCad 10 project (schematic
   + PCB), current as of **Rev5**
 - [`hardware/kicad/libraries/`](hardware/kicad/libraries/) - bundled
@@ -143,7 +171,9 @@ replacement parts to hand-solder instead, sourced from Mouser/DigiKey:
 - **U3**: onsemi **MC7805CD2TR4G** (D2PAK-3, CASE 936) - confirmed via
   onsemi's own MC7800 datasheet: Pin 1=Input, Pin 2=Ground=Tab, Pin
   3=Output, an exact match to this footprint and the schematic.
-- **U5**: TI **LM1086CSX-3.3/NOPB** (DDPAK/TO-263, package KTT) -
+- **U5**: TI **LM1086CSX-3.3/NOPB** (DDPAK/TO-263, package KTT; the
+  qualified board uses the in-stock **LM1086IS-3.3/NOPB**, same package and
+  pinout, industrial temp grade) -
   confirmed via TI's own datasheet: Pin 1=ADJ/GND, Pin 2+Tab=Output, Pin
   3=Input, an exact match to this footprint and the schematic (tab wired
   to Output by design).

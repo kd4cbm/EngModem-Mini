@@ -1,8 +1,27 @@
 # Changes
 
-Hardware-side changelog for EngModem Mini. For firmware changes, see the
-[Zimodem-VFD-Mini](https://github.com/kd4cbm/Zimodem-VFD-Mini) repo's own
-`CHANGES.md`.
+Hardware-side changelog for EngModem Mini. For firmware changes, see
+[`firmware/CHANGES.md`](firmware/CHANGES.md).
+
+## Rev5 qualification and firmware (2026-09)
+
+No design change - the Rev5 PCB, schematic and Gerbers are unchanged. A Rev5
+board was built and qualified on the bench; see
+[`docs/QUALIFICATION.md`](docs/QUALIFICATION.md).
+
+- **Added** [`firmware/`](firmware/): the qualified firmware (`firmware-v4-rev1`) with
+  source, binaries, checksums and the hardware QA scripts.
+- **Added** [`docs/`](docs/): builder's bring-up guide, qualification report,
+  errata, and a J12 cable guide.
+- **BOM:** `BOM_full.csv` updated for the qualified U5 substitution
+  (TI LM1086IS-3.3/NOPB) and a J12 note about its AT/Everex pin order.
+- **README:** removed the "not fabricated or bench-tested" disclaimer; added a
+  status section; corrected the design-stage "18/18" firmware cross-check
+  claim (it did not check signal direction - see
+  [`docs/ERRATA.md`](docs/ERRATA.md#e3-earlier-pin-cross-check-missed-signal-direction)).
+- Firmware defects found and fixed during qualification (RTS/CTS roles, saved
+  config, DTR input, RTS left deasserted, serial-to-TCP stall) are described in
+  [`firmware/CHANGES.md`](firmware/CHANGES.md); none required a board change.
 
 ## Rev5: U2 ground-pad via stitching + enclosure jigs
 

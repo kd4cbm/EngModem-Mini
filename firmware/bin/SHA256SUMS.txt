@@ -1,0 +1,4 @@
+f94c5d786a7a8fab06ac5d10e33bf37711a6697636dc037559ea19cc410a17f0 *boot_app0.bin
+105c754734ad157b55de76d85d559f60edccf61ec8ea360c8934610af8fbafa2 *zimodem.ino.bin
+31b3c1be45dc5a76aa85c82540d6787b675e711eaf11021a5eea7e36f469c6de *zimodem.ino.bootloader.bin
+1d9cca96de0fe07ad7fc0648b9878ddecd9ce565e38b589ad20fea698ed4c80c *zimodem.ino.partitions.bin
