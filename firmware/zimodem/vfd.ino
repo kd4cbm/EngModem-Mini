@@ -6,6 +6,13 @@
 #define VFD_ROWS 2
 #define VFD_COLS 24
 
+#ifdef ENGMODEM_MINI_BOARD
+// Wait after every instruction (RS=0). The original 1 us was too tight on the real
+// EngModem Mini: bring-up saw a byte written right after Set-DDRAM-Address occasionally
+// dropped (first row character missing), and a scrambled display after warm resets.
+#define VFD_INSTR_WAIT_US 50
+#endif
+
 static void vfdPulseEnable()
 {
   digitalWrite(DEFAULT_PIN_VFD_E, HIGH);
@@ -34,8 +41,12 @@ static void vfdWriteByte(uint8_t rs, uint8_t value)
 
   if(rs == 0 && value <= 0x03)
     delayMicroseconds(100);      // Display Clear (01H) / Cursor Home (02H-03H)
+#ifdef ENGMODEM_MINI_BOARD
+  else if(rs == 0)
+    delayMicroseconds(VFD_INSTR_WAIT_US);   // every other instruction
+#endif
   else
-    delayMicroseconds(1);        // 666ns typ settle for everything else
+    delayMicroseconds(1);        // 666ns typ settle for data writes
 }
 
 // BR: 0=100% (default) 1=75% 2=50% 3=25%
@@ -111,6 +122,27 @@ static void vfdDefineChar(uint8_t code, const uint8_t *pattern)
 
 static uint32_t vfdSplashUntil = 0;
 
+#ifdef ENGMODEM_MINI_BOARD
+// Full display initialisation that works from ANY controller state. The original init
+// (a single lone nibble) assumes the controller has just powered up in 8-bit mode; after an
+// ESP32 reset the VFD stays powered, and on the real board that init left the display
+// scrambled on roughly half of warm resets (Rev5 bring-up, 2026-09-21). Three 8-bit
+// function-set nibbles force 8-bit mode from any nibble phase, then 0x2 selects 4-bit -
+// the standard HD44780-family resync. Safe to run repeatedly.
+static void vfdResyncInit()
+{
+  vfdWriteNibble(0b0011); delay(5);
+  vfdWriteNibble(0b0011); delay(1);
+  vfdWriteNibble(0b0011); delay(1);
+  vfdWriteNibble(0b0010); delay(1);      // IF=0: 4-bit from here on
+  vfdWriteByte(0, 0x20);                 // Function Set, confirm 4-bit
+  vfdWriteByte(0, 0x0C);                 // Display ON, cursor off, blink off
+  vfdWriteByte(0, 0x06);                 // Entry mode: increment, no shift
+  vfdWriteByte(0, 0x01);                 // Clear display
+  delay(3);
+}
+#endif
+
 static void vfdInit()
 {
   pinMode(DEFAULT_PIN_VFD_RS, OUTPUT);
@@ -128,6 +160,9 @@ static void vfdInit()
   // splash below, this delay only runs once, so it's worth erring generous.
   delay(250);
 
+#ifdef ENGMODEM_MINI_BOARD
+  vfdResyncInit();               // works from any controller state - see vfdResyncInit()
+#else
   // Wake-up nibble: the controller powers up expecting 8-bit-wide
   // instructions, but DB3-DB0 are "don't care" for Function Set, so one
   // lone upper-nibble write is already a complete, valid instruction. Sets
@@ -140,6 +175,7 @@ static void vfdInit()
   vfdWriteByte(0, 0x0C);         // Display ON, cursor off, blink off
   vfdWriteByte(0, 0x06);         // Entry mode: increment, no shift
   vfdWriteByte(0, 0x01);         // Clear display
+#endif
 
   vfdDefineChar(1, vfdGlyphUp);
   vfdDefineChar(2, vfdGlyphDown);
@@ -251,6 +287,12 @@ static void vfdLoop()
   static uint32_t lastScrollStep = 0;
   char top[VFD_COLS + 40];   // extra room for "Dest: " + host + ":" + port before truncation
 
+#ifdef ENGMODEM_VFD_RESET_TEST
+  // TEST BUILD ONLY - never defined in release builds. Restarts the ESP32 so many warm resets
+  // can be watched in a row (the VFD stays powered through each one, like a real reset).
+  if(millis() > 8500UL)
+    ESP.restart();
+#endif
   if(millis() < vfdSplashUntil)
   {
     // Re-send the splash periodically rather than writing it once and
@@ -259,6 +301,17 @@ static void vfdLoop()
     if(millis() - lastSplashWrite >= VFD_SPLASH_REFRESH_MS)
     {
       lastSplashWrite = millis();
+#ifdef ENGMODEM_MINI_BOARD
+      // Re-run the full init about once a second during the splash window, so a display
+      // that came up scrambled after a reset heals itself instead of staying wrong until
+      // the next reset. (The re-init clears the screen; the text is re-sent right below.)
+      static uint32_t lastResync = 0;
+      if(millis() - lastResync >= 1000)
+      {
+        lastResync = millis();
+        vfdResyncInit();
+      }
+#endif
       // CGRAM is exactly as vulnerable to the same "VFD not awake yet" loss
       // as the splash text was - it just wasn't being retried before, which
       // is why the arrows were showing as solid blocks (undefined CGRAM

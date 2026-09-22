@@ -124,6 +124,54 @@ this flag is defined.
   order is preserved (the queue is flushed before any escape-sequence bytes
   and before leaving stream mode). Gated on `ENGMODEM_MINI_BOARD`; other
   builds keep the original per-byte path.
+- **AA / HS / OH LEDs were inverted on this board (v5).** On the EngModem Mini these three
+  LEDs are wired GPIO -> 330R -> LED anode, cathode -> GND, so they light when the pin is driven
+  HIGH. The firmware's dev-board constants are active-LOW, so on the built board AA and OH were lit
+  at idle and dark when "active", and HS was dark at 115200. Found when the owner compared the
+  panel with the design: at idle the panel showed MR off, TR on, SD on, RD on, OH on, CD on, AA on,
+  HS off. Under `ENGMODEM_MINI_BOARD` the AA/HS/OH active levels are now HIGH. All writes to these
+  pins go through the `DEFAULT_*_ACTIVE/INACTIVE` constants, so every code path flips together.
+  The other five LEDs (MR TR SD RD CD) are driven through U4, a non-inverting 74HCT245, from
+  active-LOW modem signals; their inversion is a hardware matter (planned fix: replace U4 with an
+  inverting 74HCT640, pin-compatible) and is not changed by firmware.
+- **VFD initialisation made robust against warm resets (v5).** On the real board the display came
+  up scrambled after ESP32 resets (the VFD stays powered through them): in a rotation test the v4
+  init scrambled roughly half of warm resets, while a resync-first init, a resync init re-sent once
+  a second, and the old init with 50 us instruction waits were each clean (15 boots each). Three
+  changes under `ENGMODEM_MINI_BOARD`, all in `vfd.ino`:
+  - `vfdResyncInit()`: three 8-bit function-set nibbles (0x3) then 0x2, then the usual
+    instructions. Works from any controller state; used at boot.
+  - A 50 us wait after every instruction (was 1 us). This also addresses an occasionally
+    dropped first character on a row seen right after a Set-DDRAM-Address instruction.
+  - During the 7 s splash window `vfdResyncInit()` is re-run about once a second, so a display
+    that came up wrong repairs itself instead of staying scrambled until the next reset.
+  The theory that the old single-nibble init misaligned an already-4-bit controller was tested
+  and did NOT reproduce (repeating the old init was harmless), so the exact mechanism is still
+  unproven; the fix is justified by the measured before/after, not by a proven cause.
+  A test-only macro `ENGMODEM_VFD_RESET_TEST` (never defined in release builds) restarts the ESP32
+  every ~8.5 s so warm resets can be watched in a row.
+- **Modem UART receive buffer was stuck at 256 bytes; now 4096 (v6b).** `setup()` called
+  `HWSerial.setRxBufferSize(RX_BUFFER_SIZE)` AFTER `HWSerial.begin()`. The Arduino-ESP32 core rejects that
+  once the port is running ("RX Buffer can't be resized when Serial is already running"), so the UART has
+  always used the 256-byte default. With flow control OFF and traffic in both directions at full 115200
+  line rate, the receive path overflowed and lost data in whole 129-byte chunks (UART FIFO overflow
+  resets): on the built board, echo streams lost data from 8 KB up, in most runs from 20 KB up (30 KB: 0 of 3 clean,
+  40 KB: 0 of 3 clean; 20 KB: about 13% lost in the worst run). RTS/CTS ON was always lossless, and one-way
+  transfers (PC sending, network sinking) were lossless up to 100 KB even before this change. Under
+  `ENGMODEM_MINI_BOARD` the size is now set before `begin()`.
+- **Serial->socket loop handles at most 250 bytes per pass (v6b).** Enlarging the buffer alone (an interim
+  build called v6) let `ZStream::serialIncoming()` drain up to 4096 bytes in one pass, starving the
+  socket->serial direction: the flow-controlled 200 KB duplex stream slowed from ~18 s to 24-37 s and one
+  run returned 199,999 of 200,000 bytes. `serialIncoming()` now handles at most `ZSTREAM_RX_PASS_MAX`
+  (250, one TX-buffer's worth) bytes per pass, so both directions are serviced alternately. Measured on
+  the built board (115200, COM1 and COM15): flow-controlled 200 KB duplex 17.6-19.4 s, byte-exact 5 of 5
+  (v5-rev1: 18.1-18.9 s); flow-off echo 3.6-40 KB clean in all 20 runs (v5-rev1 lost data from 8 KB up);
+  one-way 20 KB and 100 KB lossless; 100 KB flow-controlled streams at 230400/460800/921600 byte-exact at
+  ~17.3-17.8 KB/s (unchanged). Flow-off, full-duplex, sustained streams of ~60 KB can still lose data
+  (2 runs: one clean, one lost 2,709 bytes): the modem forwards slightly slower than a full-speed sender in
+  both directions at once, so no buffer size makes that lossless - use RTS/CTS for long transfers.
+  A "1 byte short on the echo return" also appears occasionally in flow-off echo runs; it was present in
+  v5-rev1 baselines too and its cause is not known.
 
 ## New: 24x2 character VFD status display
 

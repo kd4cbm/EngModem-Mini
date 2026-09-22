@@ -10,16 +10,16 @@ status display, further specialised for this board with the
 `ENGMODEM_MINI_BOARD` build flag (already `#define`d near the top of
 `zimodem/zimodem.ino`).
 
-**Revision:** `firmware-v4-rev1` - Zimodem 4.0.3 base, sdk v5.5.5,
+**Revision:** `firmware-v6b-rev1` - Zimodem 4.0.3 base, sdk v5.5.5,
 ESP32 Arduino core 3.3.11. Every change from upstream is listed in
-[`CHANGES.md`](CHANGES.md); the four numbered fix rounds (v1-v4) are listed
+[`CHANGES.md`](CHANGES.md); the numbered fix rounds (v1 to v6b) are listed
 there too. Apache-2.0, see [`LICENSE`](LICENSE) and [`NOTICE`](NOTICE) (the
 *hardware* in the rest of this repo is CERN-OHL-S v2).
 
 | Folder / file | What it is |
 |---|---|
 | [`zimodem/`](zimodem/) | Arduino sketch source (`zimodem.ino` + tabs, bundled `src/libssh2`) |
-| [`bin/`](bin/) | The exact binaries that were flashed for qualification, with `SHA256SUMS.txt` |
+| [`bin/`](bin/) | The exact binaries flashed and qualified on the board (v6b-rev1), with `SHA256SUMS.txt` |
 | [`tests/`](tests/) | The Python hardware QA scripts used for qualification |
 | [`PIN_MAP.md`](PIN_MAP.md) | ESP32-S3 GPIO to signal mapping this firmware expects |
 | [`CHANGES.md`](CHANGES.md) | Full change list vs. upstream, with the reason for each |
@@ -103,22 +103,32 @@ arduino-cli compile \
 
 That produces the four images above under `build/` (39 % of program storage,
 17 % of RAM). A different core version may change behaviour: the v4 serial-to-TCP
-fix in particular exists because of how core 3.x's socket write retries behave
-(see [`CHANGES.md`](CHANGES.md)). Rebuilding will not reproduce the released
+fix exists because of how core 3.x's socket write retries behave, and the v6b
+receive-buffer fix because core 3.x only accepts `setRxBufferSize()` before
+`begin()` (see [`CHANGES.md`](CHANGES.md)). Rebuilding will not reproduce the released
 binaries bit-for-bit (timestamps are embedded), which is why the exact
 released binaries and their checksums are included.
 
 ## Known limits of this revision
 
-- Serial-to-TCP data is buffered for up to 10 ms (2 ms after the last byte) to
-  avoid the stall described in `CHANGES.md`. Keystroke round-trip through a TCP
-  echo on a home network measured a median of 45.7 or 61.3 ms (v3, without the
-  buffering: 45.6 ms), so at most one ~15 ms step is added. Both revisions show
-  the same 365-430 ms worst-case tail, which is ESP32 WiFi power-save.
-- In *command mode* the modem processes roughly 4.6 KB/s regardless of line
-  speed; flow control keeps data intact above that, but it is a ceiling.
-  In connected (stream) mode throughput measured ~10.5 KB/s at 115200.
-- `vfdInit()` sends the VFD's initialisation sequence exactly once, ~0.25 s
-  after boot. If the display is blank, check the J1 wiring first, then reset.
-- The `tests/` scripts have bench-specific COM ports and IP addresses hard-coded
-  at the top; edit them before use (see [`tests/README.md`](tests/README.md)).
+- **Flow control off has a ceiling.** With RTS/CTS off and data flowing in *both* directions
+  at full 115200 line rate for a long time (tested with a PC echo server), the modem forwards slightly
+  slower than a full-speed sender can push, so a very long stream can still lose data. Measured on the
+  qualified unit: echo streams up to 40 KB were clean in all 20 runs, sustained ~60 KB lost data in one
+  of two runs; one-way transfers (PC sending, network receiving) were lossless up to 100 KB. **Use
+  RTS/CTS (`AT&K3`) for long transfers** - it was byte-exact in every test, including 100 KB streams at
+  230400, 460800 and 921600 baud. An occasional "1 byte short on the echo return" seen in flow-off echo
+  runs also appears in earlier revisions; its cause is unknown.
+- Serial-to-TCP data is buffered for up to 10 ms (2 ms after the last byte) to avoid the stall
+  described in `CHANGES.md`. Keystroke round-trip through a TCP echo on a home network measured a median
+  of 45-61 ms; the 365-430 ms worst-case tail is ESP32 WiFi power-save.
+- In *command mode* the modem processes roughly 4.6 KB/s regardless of line speed; flow control keeps
+  data intact above that, but it is a ceiling. In connected (stream) mode throughput measured
+  ~11 KB/s at 115200 and ~17.5 KB/s at 230400-921600 (WiFi/CPU-bound, not line-bound).
+- The VFD init is now self-repairing (resync at boot, re-sent about once a second during the 7 s
+  splash window). If the display is blank, check the J1 wiring first, then reset.
+- **LED behaviour:** AA, HS and OH are corrected in firmware (they light when active). MR, TR, SD, RD
+  and CD are driven through U4 in hardware and read *inverted* on Rev5 as built - see
+  [`../docs/ERRATA.md`](../docs/ERRATA.md#e11-most-front-panel-leds-read-inverted).
+- The `tests/` scripts have bench-specific COM ports and IP addresses hard-coded at the top (or take
+  `QA_PORT`); edit them before use (see [`tests/README.md`](tests/README.md)).

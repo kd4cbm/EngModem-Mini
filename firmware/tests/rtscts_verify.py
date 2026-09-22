@@ -1,6 +1,7 @@
 import serial, time, threading, sys
 
-PORT, BAUD = "COM15", 115200
+import os
+PORT, BAUD = os.environ.get("QA_PORT", "COM15"), 115200
 results = []
 
 def check(name, ok, detail=""):
