@@ -1,9 +1,10 @@
 # EngModem Mini Rev5 - hardware qualification report
 
 **Status: one Rev5 board was built, brought up and functionally qualified,
-19-21 September 2026.** Sections 1-3 record the first pass (firmware v1 to v4,
-`firmware-v4-rev1`); qualification of the firmware in this repository,
-`firmware-v6b-rev1`, is in [section 5](#5-re-qualification-on-firmware-v6b-rev1).
+19-22 September 2026.** Sections 1-3 record the first pass (firmware v1 to v4,
+`firmware-v4-rev1`); firmware-v6b-rev1 re-qualification is in
+[section 5](#5-re-qualification-on-firmware-v6b-rev1); the firmware in this
+repository, `firmware-v7-rev1`, is in [section 6](#6-re-qualification-on-firmware-v7-rev1).
 Everything here was run on real hardware. This is a *functional bench qualification of a single
 unit*, not a compliance or environmental test - see
 [What was not tested](#what-was-not-tested) before relying on the board for
@@ -87,6 +88,7 @@ Found later (details in section 5 and the errata):
 | 7 | AA / HS / OH LEDs driven active-low, but wired to light when high | Those three LEDs inverted | v5 (firmware) |
 | 8 | MR / TR / SD / RD / CD read inverted through U4 (non-inverting buffer, active-low signals) | Five LEDs inverted | **not fixed** - planned hardware change ([E11](ERRATA.md#e11-most-front-panel-leds-read-inverted)) |
 | 9 | Modem UART receive buffer never applied (set after `begin()`), so 256 bytes | Flow-off two-way traffic lost data from about 8 KB ([E12](ERRATA.md#e12-serial-receive-buffer-was-256-bytes-not-4096-fixed-in-firmware-v6b)) | v6b |
+| 10 | On a fresh boot, flow control off (default) and PC RTS low, the modem never answers until `AT&K3` is issued once | Looks like a dead board on a fresh boot if the terminal doesn't assert RTS by default | **not fixed** - six firmware-level fix attempts tested and disproven; likely below what firmware can reach ([E13](ERRATA.md#e13-on-a-fresh-boot-a-low-pc-rts-line-stops-the-modem-answering-at-all-open-issue)) |
 
 Defect 1 also exposed a **gap in the earlier design verification** (the "18/18
 GPIO cross-check" compared GPIO numbers and net names, not signal direction) -
@@ -158,3 +160,45 @@ tested only through the adapter.
   on the USB adapter.
 - All items in "What was not tested" above still apply (no voltage or signal-level measurements, single unit,
   no long soak, no ESD/EMC).
+
+## 6. Re-qualification on firmware v7-rev1
+
+`firmware-v7-rev1` adds one fix to v6b-rev1: SSH sessions now send the configured `AT&S41` term type
+to the host instead of always sending the literal string `"vanilla"` (see `CHANGES.md`). Confirmed
+with a local test SSH server logging the pty-req TERM value it received: before the fix, always
+`vanilla`; after, matches `AT&S41` (tested with `vt100`). Telnet's own TERMTYPE negotiation was
+already correct and unaffected.
+
+The full `firmware/tests/` suite was re-run on the same unit; every check passed except one, described
+below.
+
+| Test | Result |
+|---|---|
+| RTS/CTS suite, baud sweep, PC-side CTS across `AT&K3`/`AT&K0`, hang up on DTR, incoming call/RI, flow-controlled streams, bulk command-mode integrity | Same results as [section 5](#5-re-qualification-on-firmware-v6b-rev1) |
+| SSH pty-req TERM value matches `AT&S41` | Pass (new test this round) |
+| `rtscts_verify.py` T1 (`AT&K0`, PC RTS low) on a **genuinely fresh boot**, before anything has touched `AT&K3` | **Fail** - see defect 10 / [ERRATA E13](ERRATA.md#e13-on-a-fresh-boot-a-low-pc-rts-line-stops-the-modem-answering-at-all-open-issue) |
+
+**How the fresh-boot failure was found:** every earlier "14/14" RTS/CTS pass, back to v2, had happened
+to run right after some other test in the same boot session had already touched `AT&K3` - this was the
+first time a truly fresh reboot was immediately followed by that check as the very first command
+sequence, so the bug's actual precondition had never been exercised before. A dedicated regression
+script, `tests/qa_freshboot_rts.py`, was added to reproduce it repeatably; on `firmware-v7-rev1` it
+shows (COM7 = program/reset port, COM15 = modem port, 115200 baud):
+
+| Step | Result |
+|---|---|
+| Fresh boot, RTS high (control) | Pass - 0.05 s |
+| Fresh boot, RTS low, `AT&K` never touched (the defect) | **Fail - no response in 6 s** |
+| `AT&K3` accepted | Pass |
+| `AT&K0` accepted | Pass |
+| RTS low again, after one `AT&K3`/`AT&K0` cycle | Pass - 0.05 s |
+
+A firmware-level fix was attempted (see ERRATA E13 for the six approaches tried) but none resolved
+it; `firmware-v7-rev1` ships with this behaviour unchanged from v6b-rev1 and v4-rev1, now documented
+rather than undiscovered.
+
+### Still not verified (v7-rev1, in addition to section 5's list)
+- Whether asserting RTS externally (e.g. a terminal or cable that raises it by default) reliably avoids
+  the fresh-boot stall in practice was not tested beyond the scripted RTS-high control case above.
+- A scope/meter reading on the CTS-input pin (GPIO17) at the moment of the stall, which would confirm
+  or rule out the hardware-level theory in ERRATA E13, was not done.

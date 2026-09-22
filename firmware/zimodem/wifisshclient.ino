@@ -93,7 +93,11 @@ int WiFiSSHClient::connect(IPAddress ip, uint16_t port)
     closeSSH();
     return false;
   }
-  if(libssh2_channel_request_pty(channel, "vanilla")) 
+  // Was hardcoded to the literal "vanilla", which has no special meaning to libssh2 or the SSH
+  // protocol - it was just sent as-is as the pty-req TERM value, so AT&S41=<termtype> (termType,
+  // used correctly by the Telnet path in pet2asc.ino) had no effect on SSH sessions. termType is a
+  // static in zimodem.ino, the first file in the concatenated sketch, so it's already visible here.
+  if(libssh2_channel_request_pty(channel, termType.c_str()))
   {
     debugPrintf("wifisshclient: failed pty\n\r");
     closeSSH();

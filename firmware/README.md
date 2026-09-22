@@ -10,16 +10,16 @@ status display, further specialised for this board with the
 `ENGMODEM_MINI_BOARD` build flag (already `#define`d near the top of
 `zimodem/zimodem.ino`).
 
-**Revision:** `firmware-v6b-rev1` - Zimodem 4.0.3 base, sdk v5.5.5,
+**Revision:** `firmware-v7-rev1` - Zimodem 4.0.3 base, sdk v5.5.5,
 ESP32 Arduino core 3.3.11. Every change from upstream is listed in
-[`CHANGES.md`](CHANGES.md); the numbered fix rounds (v1 to v6b) are listed
+[`CHANGES.md`](CHANGES.md); the numbered fix rounds (v1 to v7) are listed
 there too. Apache-2.0, see [`LICENSE`](LICENSE) and [`NOTICE`](NOTICE) (the
 *hardware* in the rest of this repo is CERN-OHL-S v2).
 
 | Folder / file | What it is |
 |---|---|
 | [`zimodem/`](zimodem/) | Arduino sketch source (`zimodem.ino` + tabs, bundled `src/libssh2`) |
-| [`bin/`](bin/) | The exact binaries flashed and qualified on the board (v6b-rev1), with `SHA256SUMS.txt` |
+| [`bin/`](bin/) | The exact binaries flashed and qualified on the board (v7-rev1), with `SHA256SUMS.txt` |
 | [`tests/`](tests/) | The Python hardware QA scripts used for qualification |
 | [`PIN_MAP.md`](PIN_MAP.md) | ESP32-S3 GPIO to signal mapping this firmware expects |
 | [`CHANGES.md`](CHANGES.md) | Full change list vs. upstream, with the reason for each |
@@ -130,5 +130,9 @@ released binaries and their checksums are included.
 - **LED behaviour:** AA, HS and OH are corrected in firmware (they light when active). MR, TR, SD, RD
   and CD are driven through U4 in hardware and read *inverted* on Rev5 as built - see
   [`../docs/ERRATA.md`](../docs/ERRATA.md#e11-most-front-panel-leds-read-inverted).
+- **On a fresh boot, a low PC RTS line stops the modem answering at all** until `AT&K3` is issued once
+  (flow control is off by default) - most terminals assert RTS by default so this is easy to miss, but
+  see [`../docs/ERRATA.md`](../docs/ERRATA.md#e13-on-a-fresh-boot-a-low-pc-rts-line-stops-the-modem-answering-at-all-open-issue)
+  before assuming a silent board is dead.
 - The `tests/` scripts have bench-specific COM ports and IP addresses hard-coded at the top (or take
   `QA_PORT`); edit them before use (see [`tests/README.md`](tests/README.md)).
