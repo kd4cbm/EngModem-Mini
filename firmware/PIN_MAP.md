@@ -56,6 +56,26 @@ at the top, **J1 is the left-side header, J3 is the right-side header**.
 | J3-9 | GPIO39 | VFD DB5 | |
 | J3-18 | GPIO21 | *(spare)* | last spare GPIO on the board |
 
+## Front-panel LEDs (order and polarity)
+
+Left to right: **MR, TR, SD, RD, OH, CD, AA, HS** (PCB designators D8 to D1; confirmed by a blink test on the
+built unit). Every LED is wired anode -> resistor -> drive signal, cathode -> GND, so it **lights when its
+drive signal is HIGH**.
+
+| LED | Signal | How driven | Note |
+|---|---|---|---|
+| MR | `/TTL-DSR` (GPIO7, output) | via U4 (74HCT245, non-inverting) | DSR is asserted LOW, so MR is dark when ready on Rev5 as built |
+| TR | `/TTL-DTR` (GPIO4, **input** from the MAX3237) | via U4 | never drive this pin |
+| SD | `/TTL-TXD` (GPIO16) | via U4 | UART idles HIGH, so lit at idle on Rev5 as built |
+| RD | `/TTL-RXD` (GPIO15, **input** from the MAX3237) | via U4 | never drive this pin |
+| OH | GPIO12 | direct | firmware drives it active-HIGH (v5+) |
+| CD | `/TTL-DCD` (GPIO5) | via U4 | DCD is asserted LOW, so lit when there is no carrier on Rev5 as built |
+| AA | GPIO10 | direct | firmware drives it active-HIGH (v5+) |
+| HS | GPIO11 | direct | firmware drives it active-HIGH (v5+) |
+
+The five LEDs through U4 read inverted on Rev5 as built; the planned fix is a pin-compatible inverting
+buffer in place of U4. See [`../docs/ERRATA.md`](../docs/ERRATA.md#e11-most-front-panel-leds-read-inverted).
+
 ## Power regulation - not GPIO-mapped
 
 The board's 5V and 3.3V rails come from two D2PAK/TO-263-3 linear

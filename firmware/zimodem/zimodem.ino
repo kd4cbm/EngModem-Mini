@@ -91,12 +91,24 @@ const char compile_date[] = __DATE__ " " __TIME__;
 #   define DEFAULT_PIN_WIFI 26
 # endif
 # define DEFAULT_HS_BAUD 38400
-# define DEFAULT_AA_ACTIVE LOW
-# define DEFAULT_AA_INACTIVE HIGH
-# define DEFAULT_HS_ACTIVE LOW
-# define DEFAULT_HS_INACTIVE HIGH
-# define DEFAULT_WIFI_ACTIVE LOW
-# define DEFAULT_WIFI_INACTIVE HIGH
+# ifdef ENGMODEM_MINI_BOARD
+   // On the EngModem Mini the AA/HS/OH LEDs are wired GPIO -> 330R -> LED anode, cathode -> GND,
+   // so they light when the pin is driven HIGH. The dev-board defaults below are active-LOW
+   // and left these three LEDs inverted (lit while idle, dark while "active").
+#  define DEFAULT_AA_ACTIVE HIGH
+#  define DEFAULT_AA_INACTIVE LOW
+#  define DEFAULT_HS_ACTIVE HIGH
+#  define DEFAULT_HS_INACTIVE LOW
+#  define DEFAULT_WIFI_ACTIVE HIGH
+#  define DEFAULT_WIFI_INACTIVE LOW
+# else
+#  define DEFAULT_AA_ACTIVE LOW
+#  define DEFAULT_AA_INACTIVE HIGH
+#  define DEFAULT_HS_ACTIVE LOW
+#  define DEFAULT_HS_INACTIVE HIGH
+#  define DEFAULT_WIFI_ACTIVE LOW
+#  define DEFAULT_WIFI_INACTIVE HIGH
+# endif
 #endif
 
 #define DEFAULT_BAUD_RATE 1200
@@ -729,13 +741,23 @@ void setup()
     SPIFFS.begin();
     debugPrintf("SPIFFS Formatted.\r\n");
   }
+#ifdef ENGMODEM_MINI_BOARD
+  // The Arduino-ESP32 core only accepts setRxBufferSize() BEFORE begin() ("RX Buffer can't be
+  // resized when Serial is already running"). The original call further down came after begin(), so
+  // it was silently rejected and the modem UART ran with the core's 256-byte default receive buffer.
+  // With flow control off, a sustained full-speed stream then overflowed it (about 13% of a 20 KB
+  // stream lost at 115200 on the built board). Set it first so RX_BUFFER_SIZE actually applies.
+  HWSerial.setRxBufferSize(RX_BUFFER_SIZE);
+#endif
 # ifdef DEFAULT_PIN_RXD
     debugPrintf("Using BPS %d, RXD %d, TXD %d\r\n",DEFAULT_BAUD_RATE,DEFAULT_PIN_RXD, DEFAULT_PIN_TXD);
     HWSerial.begin(DEFAULT_BAUD_RATE, DEFAULT_SERIAL_CONFIG, DEFAULT_PIN_RXD, DEFAULT_PIN_TXD);
 # else
     HWSerial.begin(DEFAULT_BAUD_RATE, DEFAULT_SERIAL_CONFIG);  //Start Serial
 # endif
-  HWSerial.setRxBufferSize(RX_BUFFER_SIZE);
+#ifndef ENGMODEM_MINI_BOARD
+  HWSerial.setRxBufferSize(RX_BUFFER_SIZE);   // no effect on ESP32 (called after begin); kept for other builds
+#endif
   commandMode.loadConfig();
 #ifdef ENGMODEM_MINI_BOARD
   // Boot-time confirmation of the RTS/CTS pin roles actually in effect after

@@ -1,5 +1,12 @@
 # Front panel LED labels - CNC engraving plan (draft)
 
+> **Note on what the labels mean electrically (added after bring-up):** every LED lights when its drive
+> signal is HIGH, and five of them (MR, TR, SD, RD, CD) go through a non-inverting buffer from active-low
+> signals, so on Rev5 as built they read inverted (for example CD is lit when there is *no* carrier). The
+> labels below name the *function*, which is unaffected, but see
+> [`../docs/ERRATA.md`](../docs/ERRATA.md#e11-most-front-panel-leds-read-inverted) before deciding what
+> lit/dark should mean on your panel. The left-to-right order was confirmed on the built unit.
+
 **Preliminary - not yet cut.** Positions are derived directly from the
 front panel drill guide's own geometry (`build_jig1_vfd_drill.py`), not
 re-estimated separately. Text height/V-bit choice are sizing/tooling

@@ -3,13 +3,30 @@
 Hardware-side changelog for EngModem Mini. For firmware changes, see
 [`firmware/CHANGES.md`](firmware/CHANGES.md).
 
+## Firmware v6b-rev1 and LED documentation (2026-09)
+
+No design change. Further bring-up on the same Rev5 unit found that most front-panel LEDs read inverted
+and that the VFD and the serial receive path had firmware problems; see
+[`docs/ERRATA.md`](docs/ERRATA.md) (E8, E11, E12) and [`docs/QUALIFICATION.md`](docs/QUALIFICATION.md#5-re-qualification-on-firmware-v6b-rev1).
+
+- **Firmware updated to `firmware-v6b-rev1`:** VFD init that survives ESP32 resets, AA/HS/OH LED polarity
+  corrected, modem UART receive buffer actually applied (it was always 256 bytes, in v4-rev1 too), and a
+  per-pass cap in the stream loop. Binaries and checksums under [`firmware/bin/`](firmware/bin/).
+- **Docs:** new errata E8 (rewritten), E11 (LED inversion, planned U4 fix - not yet built or verified), E12
+  (receive buffer); qualification re-run on v6b-rev1; corrected LED guidance in the bring-up guide.
+- **Added** [`tools/led_position_test/`](tools/led_position_test/): blink each LED in turn to confirm the
+  front-panel order.
+- **Firmware tests:** the QA scripts take a `QA_PORT` setting and gained loss-versus-size and one-way tools.
+- **Hardware change proposed, not made:** replace U4 (74HCT245) with a pin-compatible inverting buffer
+  (candidate 74HCT640) so all eight LEDs read correctly.
+
 ## Rev5 qualification and firmware (2026-09)
 
 No design change - the Rev5 PCB, schematic and Gerbers are unchanged. A Rev5
 board was built and qualified on the bench; see
 [`docs/QUALIFICATION.md`](docs/QUALIFICATION.md).
 
-- **Added** [`firmware/`](firmware/): the qualified firmware (`firmware-v4-rev1`) with
+- **Added** [`firmware/`](firmware/): the qualified firmware (first `firmware-v4-rev1`, now `firmware-v6b-rev1`) with
   source, binaries, checksums and the hardware QA scripts.
 - **Added** [`docs/`](docs/): builder's bring-up guide, qualification report,
   errata, and a J12 cable guide.

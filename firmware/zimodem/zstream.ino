@@ -83,6 +83,13 @@ void ZStream::serialIncoming()
   int bytesAvailable = HWSerial.available();
   if(bytesAvailable == 0)
     return;
+#ifdef ENGMODEM_MINI_BOARD
+  // With the 4096-byte UART receive buffer, this loop could otherwise drain thousands of bytes in a
+  // single pass, and the socket->serial direction (ZStream::loop) starved until it finished. Handle
+  // one TX-buffer's worth per pass so the two directions are serviced alternately.
+  if(bytesAvailable > ZSTREAM_RX_PASS_MAX)
+    bytesAvailable = ZSTREAM_RX_PASS_MAX;
+#endif
   uint8_t escBufDex = 0;
   while(--bytesAvailable >= 0)
   {

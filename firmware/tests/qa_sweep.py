@@ -3,6 +3,18 @@ from qa_common import *
 
 RATES = [115200, 230400, 460800, 921600, 300, 1200, 2400, 9600, 19200, 38400, 57600, 115200]
 
+# Only sweep rates the PC port itself accepts (a real 16550 UART tops out at 115200);
+# rejected rates are reported as skipped, not as modem failures.
+import serial as _serial
+def _pc_accepts(r):
+    try:
+        t = _serial.Serial(PORT, r); t.close(); return True
+    except Exception:
+        return False
+_skipped = [r for r in dict.fromkeys(RATES) if r != 115200 and not _pc_accepts(r)]
+RATES = [r for r in RATES if r not in _skipped]
+print("PC port %s rejects these rates, skipped: %s" % (PORT, _skipped), flush=True)
+
 m = M(115200)
 print("waiting 5 s for the modem...", flush=True)
 time.sleep(5)

@@ -16,6 +16,7 @@
 
 #define ZSTREAM_ESC_BUF_MAX 10
 #define ZSTREAM_TX_BUF_SIZE 250   // must stay <= 255: socketWrite(buf,len) takes a uint8_t length
+#define ZSTREAM_RX_PASS_MAX 250   // max serial bytes serialIncoming() handles per main-loop pass (Mini board)
 #define ZSTREAM_TX_IDLE_MS 2      // flush once no new serial byte has arrived for this long
 #define ZSTREAM_TX_MAX_AGE_MS 10  // ...or once the oldest queued byte is this old
 

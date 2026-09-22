@@ -1,8 +1,10 @@
 # EngModem Mini Rev5 - hardware qualification report
 
 **Status: one Rev5 board was built, brought up and functionally qualified,
-19-21 September 2026, with firmware `firmware-v4-rev1`.** Everything below was
-run on real hardware. This is a *functional bench qualification of a single
+19-21 September 2026.** Sections 1-3 record the first pass (firmware v1 to v4,
+`firmware-v4-rev1`); qualification of the firmware in this repository,
+`firmware-v6b-rev1`, is in [section 5](#5-re-qualification-on-firmware-v6b-rev1).
+Everything here was run on real hardware. This is a *functional bench qualification of a single
 unit*, not a compliance or environmental test - see
 [What was not tested](#what-was-not-tested) before relying on the board for
 anything beyond that.
@@ -38,7 +40,7 @@ section 3). Counts are the automated checks in `firmware/tests/`.
 | WiFi | Pass | v1-v4 | Joined the network, got an IP address |
 | microSD | Pass | v1-v4 | "External SD card initialized." at boot; SD shell worked (owner-verified) |
 | 24x2 VFD | Pass | v1-v4 | Working after a loose wire was corrected (owner-verified); J1 verified pin-for-pin against the VFD datasheet |
-| Status LEDs | Pass (functional) | v1-v4 | Owner-reported working; individual LED behaviour was not logged |
+| Status LEDs | Working, but **most read inverted** (see [ERRATA E11](ERRATA.md#e11-most-front-panel-leds-read-inverted)) | v1-v6b | Owner-reported working at first; polarity was checked later. Physical left-to-right order verified with a blink test on the unit |
 | Regulators U3 / U5 | Functional | - | Board runs with both fitted; **voltages were not recorded** (see below) |
 
 ### RS-232 and modem-control lines
@@ -77,6 +79,15 @@ Full detail and code references are in [`../firmware/CHANGES.md`](../firmware/CH
 | 4 | RTS pin left deasserted after switching flow control off | PC's CTS line stuck low after `AT&K3` -> `AT&K0` | v3 |
 | 5 | Serial-to-TCP data sent one byte per TCP segment | Bursts (3.6 KB at 115200) delivered ~500 B, then one byte per 10 s; only < ~300 B/s was clean. Inherited from upstream Zimodem, not a hardware issue | v4 |
 
+Found later (details in section 5 and the errata):
+
+| # | Defect | Effect | Fixed in |
+|---|---|---|---|
+| 6 | VFD init sent once and fragile across ESP32 resets | Display scrambled or blank after about half of warm resets ([E8](ERRATA.md#e8-vfd-could-come-up-scrambled-after-a-reset-fixed-in-firmware-v5)) | v5 |
+| 7 | AA / HS / OH LEDs driven active-low, but wired to light when high | Those three LEDs inverted | v5 (firmware) |
+| 8 | MR / TR / SD / RD / CD read inverted through U4 (non-inverting buffer, active-low signals) | Five LEDs inverted | **not fixed** - planned hardware change ([E11](ERRATA.md#e11-most-front-panel-leds-read-inverted)) |
+| 9 | Modem UART receive buffer never applied (set after `begin()`), so 256 bytes | Flow-off two-way traffic lost data from about 8 KB ([E12](ERRATA.md#e12-serial-receive-buffer-was-256-bytes-not-4096-fixed-in-firmware-v6b)) | v6b |
+
 Defect 1 also exposed a **gap in the earlier design verification** (the "18/18
 GPIO cross-check" compared GPIO numbers and net names, not signal direction) -
 see [ERRATA E3](ERRATA.md#e3-earlier-pin-cross-check-missed-signal-direction).
@@ -110,3 +121,40 @@ The scripts, their bench-specific settings, and what each one covers are in
 [`../firmware/tests/README.md`](../firmware/tests/README.md). They need Python 3
 and pyserial, a serial adapter on J12 (modem port), and for the signal-log
 and TCP tests a debug-UART adapter on J7 and a PC on the modem's LAN.
+
+## 5. Re-qualification on firmware v6b-rev1
+
+`firmware-v6b-rev1` (the firmware in [`../firmware/`](../firmware/)) adds to v4: the VFD init fix, the
+AA/HS/OH LED polarity, and the receive-buffer fix (E8, E11, E12). It was flashed to the same unit and the
+whole suite re-run; the modem cable was on the USB adapter (COM15) unless noted, at 115200 baud unless noted.
+
+| Test | Result |
+|---|---|
+| RTS/CTS suite | **14/14** |
+| Baud sweep 300 to 921600 (USB adapter) | **50/50** |
+| PC-side CTS across `AT&K3`/`AT&K0` | **13/13** |
+| Hang up on DTR drop | **18/18** |
+| Incoming call and RI | **20/20** |
+| DTR/RTS signal log | tracks correctly |
+| Flow-controlled streams: 3 KB at 9600, 30 KB at 57600, 200 KB at 115200, 100 KB at 230400 / 460800 / 921600 | byte-exact; 115200 at ~11 KB/s (17.6 to 19.4 s for 200 KB), 230400-921600 at ~17.3 to 17.8 KB/s |
+| Bulk command-mode integrity 9600 / 115200 / 921600 | byte-exact |
+| VFD across warm resets (a temporary build restarting the ESP32 every ~9 s) | **0 scrambled in about 40 resets** (v4-style init: roughly half) |
+| Flow **off**, two-way (echo) streams 3.6 KB to 40 KB | **clean in all 20 runs** (v5-rev1: lost data from 8 KB; 30 and 40 KB clean 0 of 6) |
+| Flow **off**, sustained ~60 KB two-way | one of two runs clean; the other lost 2,709 bytes - a real limit, **use RTS/CTS for long transfers** |
+| Flow off, one-way (PC sends, network receives) 20 KB and 100 KB | lossless |
+| Front-panel LEDs | idle panel as predicted after the firmware fix: OH off, AA off, HS on; a dynamic pass (TR dark with DTR asserted, OH on during a connection, HS off at 9600 baud, AA on with a listener) looked right but was many changes at once and is not a rigorous check |
+
+### Native serial port versus the USB adapter
+The same firmware was also tested with the modem on the PC's motherboard serial port (a standard 16550 UART,
+`COM1`) and on the USB adapter (an FTDI FT232R). Every functional test was identical, and throughput and
+keystroke latency (median about 51 to 61 ms, WiFi dominated) were the same within run-to-run variation.
+The only difference is that the native port accepts nothing above 115200 baud, so 230400 to 921600 could be
+tested only through the adapter.
+
+### Still not verified
+- The proposed U4 replacement (an inverting buffer) has **not been built or tested**; the LED behaviour after
+  it is expected, not measured (E11).
+- The v6b test run on the native port was cut short when the cable was moved; the same tests were run in full
+  on the USB adapter.
+- All items in "What was not tested" above still apply (no voltage or signal-level measurements, single unit,
+  no long soak, no ESD/EMC).

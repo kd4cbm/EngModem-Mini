@@ -1,6 +1,7 @@
 import serial, time, threading
 
-PORT = "COM15"
+import os
+PORT = os.environ.get("QA_PORT", "COM15")      # e.g. set QA_PORT=COM1 to test a different port
 results = []
 
 def check(name, ok, detail=""):
@@ -48,6 +49,16 @@ class M:
 
     def modem_baud(self, new):
         """Tell the modem to change baud, then follow it with the PC port."""
+        # Make sure the PC port accepts the rate BEFORE the modem is told to switch, so an
+        # unsupported rate can never strand the modem at a speed the PC cannot follow.
+        old = self.s.baudrate
+        try:
+            self.s.baudrate = new
+        except Exception as e:
+            try: self.s.baudrate = old
+            except Exception: pass
+            raise RuntimeError("PC port %s does not accept %d baud (%s)" % (self.s.port, new, str(e)[:60]))
+        self.s.baudrate = old
         self.s.reset_input_buffer()
         self.s.write(("ATB%d\r" % new).encode())
         self.s.flush()
