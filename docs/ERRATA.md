@@ -80,12 +80,23 @@ lives in [`../firmware/`](../firmware/).
 
 ## Firmware behaviour to know about
 
-### E8. VFD initialisation is sent once
+### E8. VFD could come up scrambled after a reset (fixed in firmware v5)
 
-The display's initialisation sequence is sent once, about 0.25 s after boot;
-the splash-retry window only re-sends text and glyphs. A missed init (for
-example a marginal or loose J1 wire) leaves the display blank until the next
-reset. Check J1 wiring first, then power-cycle.
+The VFD stays powered through an ESP32 reset, its optional `/Reset` pin (J1 pin 3) is not connected, and
+the E and RS lines have no pull resistors. Firmware up to v4 sent the display's init once, about 0.25 s
+after boot, and never re-checked it. On the tested unit that left the display **scrambled or blank after
+about half of the ESP32 restarts** (a 15-boot rotation test: the old init scrambled roughly 7-8 boots;
+plain software restarts scrambled about 4 in 22). Cold power-ups were always fine. It also occasionally
+dropped the first character written after a cursor-position instruction (the old wait after each
+instruction was 1 us).
+
+Firmware v5 and later start with the standard resync (three 8-bit function-set nibbles, then 4-bit),
+wait 50 us after every instruction, and re-run the init about once a second during the 7-second splash
+window so a bad start repairs itself. Result on the tested unit: 0 scrambles in about 40 warm resets.
+The exact mechanism is **not proven** - a theory that the old single-nibble init misaligns a controller
+that is already in 4-bit mode was tested and did not reproduce - so the fix rests on the measured
+before/after. If you build your own firmware from older sources, expect this behaviour. Suggested for a
+future revision: pull-downs on E and RS, and optionally a wire to the module's `/Reset`.
 
 ### E9. Command-mode throughput ceiling
 
@@ -105,6 +116,68 @@ SPIFFS, so you will need to reconfigure baud rate and WiFi afterwards. Remove
 J9 when done. (The factory-reset action itself was not exercised in
 qualification.)
 
+### E11. Most front-panel LEDs read inverted
+
+All eight front-panel LEDs are wired anode -> resistor -> drive signal, cathode -> GND, so each lights
+when its signal is **HIGH**. But DCD, DSR and DTR are asserted LOW and a serial line idles HIGH, so on
+Rev5 as built:
+
+- **OH, AA, HS** (driven directly by GPIO) were inverted in the firmware too. **Fixed in firmware v5**:
+  they now light when active.
+- **MR, TR, SD, RD, CD** go through U4, a non-inverting 74HCT245, from those active-low signals, so they
+  read inverted **in hardware**. Firmware cannot change this.
+
+Idle at 115200, terminal not asserting DTR, no connection - what the panel shows with firmware v5 or later
+on Rev5 as built:
+
+| MR | TR | SD | RD | OH | CD | AA | HS |
+|---|---|---|---|---|---|---|---|
+| off | on | on | on | off | on | off | on |
+
+So MR is dark when the modem is ready, CD is lit when there is **no** carrier, and SD/RD are lit at idle
+and go dark during data (the opposite of a classic modem panel).
+The tested unit's panel was observed exactly like this before the firmware fix (OH on, AA on, HS off at
+idle), which is how the problem was found. The design-stage checks verified which signal feeds each LED
+but never its active level.
+
+**Planned fix (not yet done or verified on hardware):** replace U4 with a pin-compatible **inverting**
+octal bus transceiver. The TI **CD74HCT640M** (SOIC-20 wide, same package and pinout; with DIR tied high
+and OE low, as on this board, B = NOT A) is the candidate, checked against its datasheet only - stock was
+not checked, and it must be the **HCT** version (the HC version does not meet the 3.3 V input threshold
+at 5 V). It is a single hand-soldered part swap with no other change. After it, at idle: MR on, HS on,
+everything else dark, with TR lighting when a terminal asserts DTR, OH and CD on a connection, AA with a
+listener, and SD/RD flashing with data. Until someone has done and verified the swap, treat this as a
+proposal. The tested unit's LED **order** (below) was verified physically.
+
+**Check LED order at assembly.** Left to right the panel should read MR, TR, SD, RD, OH, CD, AA, HS. On
+the tested unit the LEDs at positions 3 and 4 had been fitted in swapped positions and had to be
+corrected. [`../tools/led_position_test/`](../tools/led_position_test/) blinks each LED in turn while the
+display names it (read its note about polarity first). TR and RD are driven by the MAX3237 and cannot be
+blinked from the ESP32; identify them by opening a terminal on the modem port (DTR asserted: TR goes
+dark) and by holding a break on the transmit line (RD goes dark).
+
+### E12. Serial receive buffer was 256 bytes, not 4096 (fixed in firmware v6b)
+
+The firmware asks for a 4096-byte modem UART receive buffer, but called `setRxBufferSize()` **after**
+`begin()`, and the ESP32 Arduino core (3.3.11) rejects that once the port is running. The buffer was
+therefore always the 256-byte default - in the published `firmware-v4-rev1` too. With **flow control off**
+and traffic in both directions at full 115200 line rate, the receive path then overflowed and lost data in
+whole 129-byte chunks. On the tested unit (PC echo server, 115200): echo streams lost data from 8 KB up
+(in most runs from 20 KB up), and 30 KB and 40 KB streams were never clean (0 of 6). One-way transfers (PC sending, the
+network only receiving) were lossless up to 100 KB, and RTS/CTS on was lossless in every test.
+
+Firmware v6b sets the buffer before `begin()` and limits how many bytes the stream loop handles per pass,
+because the bigger buffer alone made flow-controlled two-way traffic 30-100% slower. Measured after the
+fix: flow-off echo streams from 3.6 KB to 40 KB were clean in all 20 runs; flow-controlled 200 KB two-way
+streams were byte-exact at the original speed; flow-controlled 100 KB streams at 230400, 460800 and
+921600 baud were byte-exact at ~17.5 KB/s.
+
+**What remains:** with flow control off, a *sustained* full-speed two-way stream of about 60 KB can still
+lose data (one of two runs did), because the modem forwards slightly slower than a full-speed sender can
+push in both directions at once - no buffer size fixes that. **Use RTS/CTS (`AT&K3`) for long transfers.**
+An occasional "one byte short on the echo return" in flow-off echo runs was also seen before the fix and
+has an unknown cause.
+
 ## Suggestions for a future revision (not commitments)
 
 - Add pull resistors (or solder-jumper defaults) for J4/J5/J8 so a missing
@@ -113,3 +186,6 @@ qualification.)
   solder-jumper to pick either order, or provide a DE-9 directly on the board.
 - Add test points on the 5 V, 3.3 V and GND rails.
 - Silkscreen J7 pins 3/4 as `DBG TX/RX`.
+- Replace U4 (74HCT245) with a pin-compatible inverting part (candidate: 74HCT640) in the design, so all
+  eight LEDs read correctly; and check active levels, not only connectivity, when auditing LED/signal paths.
+- Pull-downs on the VFD's E and RS lines (see E8).

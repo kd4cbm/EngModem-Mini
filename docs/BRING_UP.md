@@ -100,8 +100,13 @@ RTS/CTS pin roles for this board).
 - **LEDs**: left to right on the front panel MR, TR, SD, RD, OH, CD, AA, HS -
   see [`enclosure/LED_LABELS.md`](../enclosure/LED_LABELS.md) for what each
   one is wired to. Five are driven by RS-232/TTL signals through the 74HCT245
-  (U4); OH, AA and HS are direct GPIOs (12, 10, 11). Tested board: LEDs
-  functional (owner-reported).
+  (U4); OH, AA and HS are direct GPIOs (12, 10, 11). **Check the order at
+  assembly** with [`tools/led_position_test/`](../tools/led_position_test/): on the
+  tested unit two LEDs had been fitted swapped. **Expect an inverted-looking panel
+  on Rev5 as built** - MR, TR, SD, RD and CD go through U4 from active-low signals
+  and read inverted; OH, AA and HS are corrected in firmware v5+. At idle you should
+  see MR off, TR on, SD on, RD on, OH off, CD on, AA off, HS on. Details and the
+  planned fix (an inverting U4) are in [ERRATA E11](ERRATA.md#e11-most-front-panel-leds-read-inverted).
 - **SD**: any microSD card in the Hirose socket; the tested board initialised
   it at boot and the SD shell worked.
 
@@ -127,7 +132,7 @@ RTS/CTS pin roles for this board).
 | WiFi | `ATI` after `AT+CONFIG` | shows an IP address |
 | VFD | look at it | shows WiFi/IP status, baud, flow mode |
 | SD | `AT+SHELL`, then `?` | shell prompt / command list |
-| LEDs | make a connection (`ATD<host>:<port>`) and watch them | Expected from the wiring: OH (off-hook) and CD (DCD) on while connected. The tested board's LEDs were reported working by its owner, but each LED's behaviour was not logged individually. |
+| LEDs | idle, then make a connection (`ATD<host>:<port>`) and watch them | Rev5 as built: idle panel MR off, TR on, SD on, RD on, OH off, CD on, AA off, HS on. During a connection expect **OH to turn on and CD to go dark** (CD reads inverted); TR goes dark when a terminal asserts DTR (seen on the tested unit); HS is expected to be dark below 38400 baud. See [ERRATA E11](ERRATA.md#e11-most-front-panel-leds-read-inverted). |
 | Modem lines | terminal's status display, or the [QA scripts](../firmware/tests/README.md) | DSR/CTS asserted at idle; DCD asserts on connect; RI pulses on an incoming call |
 
 ## 9. Troubleshooting

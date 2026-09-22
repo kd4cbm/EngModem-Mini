@@ -15,7 +15,7 @@ hardware, further specialised for it, is included in [`firmware/`](firmware/).
 ## Status: Rev5 built and functionally qualified
 
 One Rev5 board has been built, brought up and bench-qualified with the firmware
-in [`firmware/`](firmware/) (revision `firmware-v4-rev1`), September 2026:
+in [`firmware/`](firmware/) (revision `firmware-v6b-rev1`), September 2026:
 programming over USB, boot and debug UART, WiFi, microSD, the VFD, the status
 LEDs, RS-232 at every rate from 300 to 921600 baud, RTS/CTS flow control, DTR,
 DCD and RI, and byte-exact data integrity through TCP connections. The full
@@ -30,9 +30,20 @@ Bring-up turned up a few things worth knowing **before you build one**:
 - **Three MAX3237 jumpers (J4/J5/J8) must be fitted** - see the jumper table in
   [`docs/BRING_UP.md`](docs/BRING_UP.md#3-set-the-jumpers).
 - U3/U5 are hand-soldered and U5 was substituted - see [`docs/ERRATA.md`](docs/ERRATA.md).
-- The design-stage "all pins match the firmware" check missed signal direction;
-  five firmware defects were found and fixed during qualification (none needed
-  a board change) - see [`docs/ERRATA.md`](docs/ERRATA.md#e3-earlier-pin-cross-check-missed-signal-direction).
+- **Most front-panel LEDs read inverted.** MR, TR, SD, RD and CD go through U4, a
+  non-inverting buffer, from active-low signals, so on Rev5 as built they are lit when
+  they should be dark. The firmware corrects OH, AA and HS; a pin-compatible inverting
+  part in place of U4 is the proposed fix for the rest (**not yet built or verified**) -
+  see [`docs/ERRATA.md`](docs/ERRATA.md#e11-most-front-panel-leds-read-inverted).
+  Also **check the LED order at assembly** (two LEDs were swapped on the tested unit).
+- The design-stage "all pins match the firmware" check missed signal direction and LED
+  polarity; nine firmware and design issues were found and eight fixed in firmware during
+  qualification (the LED inversion of five LEDs needs a hardware change) - see
+  [`docs/ERRATA.md`](docs/ERRATA.md#e3-earlier-pin-cross-check-missed-signal-direction) and
+  [`docs/QUALIFICATION.md`](docs/QUALIFICATION.md).
+- **Use RTS/CTS for long transfers.** With flow control off, a long full-speed two-way stream
+  can still lose data (the receive-buffer bug behind most of that is fixed in firmware v6b) -
+  see [`docs/ERRATA.md`](docs/ERRATA.md#e12-serial-receive-buffer-was-256-bytes-not-4096-fixed-in-firmware-v6b).
 
 This is a functional qualification of a single unit, not a compliance test.
 Expect further revisions.
