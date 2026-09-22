@@ -151,10 +151,14 @@ proposal. The tested unit's LED **order** (below) was verified physically.
 
 **Check LED order at assembly.** Left to right the panel should read MR, TR, SD, RD, OH, CD, AA, HS. On
 the tested unit the LEDs at positions 3 and 4 had been fitted in swapped positions and had to be
-corrected. [`../tools/led_position_test/`](../tools/led_position_test/) blinks each LED in turn while the
-display names it (read its note about polarity first). TR and RD are driven by the MAX3237 and cannot be
-blinked from the ESP32; identify them by opening a terminal on the modem port (DTR asserted: TR goes
-dark) and by holding a break on the transmit line (RD goes dark).
+corrected. **This is not a board design defect** - checked directly against the Rev5 KiCad PCB and
+schematic, the eight LED footprints sit at a uniform 5.5 mm pitch in exact D8-to-D1 order left to right,
+and each designator's net traces straight through to the signal its position implies, with no gaps or
+reversals. The swap was an assembly-time mistake on this one hand-built unit (the wrong LED inserted
+into the D5/D6 holes), not a fault in the layout. [`../tools/led_position_test/`](../tools/led_position_test/)
+blinks each LED in turn while the display names it (read its note about polarity first). TR and RD are
+driven by the MAX3237 and cannot be blinked from the ESP32; identify them by opening a terminal on the
+modem port (DTR asserted: TR goes dark) and by holding a break on the transmit line (RD goes dark).
 
 ### E12. Serial receive buffer was 256 bytes, not 4096 (fixed in firmware v6b)
 
