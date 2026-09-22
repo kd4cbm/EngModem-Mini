@@ -189,7 +189,9 @@ With flow control at its default (**off**) and the PC's RTS line **low**, a genu
 with nothing coming back. Either of these clears it for the rest of that boot session: raising RTS
 once (the modem then answers in about 30 ms), or issuing a real `AT&K3` followed by `AT&K0` from a
 terminal. Reproduced identically on `firmware-v4-rev1`, `firmware-v6b-rev1` and `firmware-v7-rev1` -
-pre-existing, not something v7 introduced or fixed.
+pre-existing, not something v7 introduced or fixed. Also reproduced byte-for-byte through the PC's
+native 16550 UART (**COM1**), not just a USB-serial (FTDI) adapter, ruling out the USB-serial
+interface as the cause - this sits on the modem board's side.
 
 **Workaround:** make sure your terminal/cable asserts RTS on connect (most do by default), or send
 `AT&K3` then `AT&K0` once after a fresh boot before relying on flow-control-off behaviour.
