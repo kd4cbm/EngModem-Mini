@@ -130,9 +130,5 @@ released binaries and their checksums are included.
 - **LED behaviour:** AA, HS and OH are corrected in firmware (they light when active). MR, TR, SD, RD
   and CD are driven through U4 in hardware and read *inverted* on Rev5 as built - see
   [`../docs/ERRATA.md`](../docs/ERRATA.md#e11-most-front-panel-leds-read-inverted).
-- **On a fresh boot, a low PC RTS line stops the modem answering at all** until `AT&K3` is issued once
-  (flow control is off by default) - most terminals assert RTS by default so this is easy to miss, but
-  see [`../docs/ERRATA.md`](../docs/ERRATA.md#e13-on-a-fresh-boot-a-low-pc-rts-line-stops-the-modem-answering-at-all-open-issue)
-  before assuming a silent board is dead.
 - The `tests/` scripts have bench-specific COM ports and IP addresses hard-coded at the top (or take
   `QA_PORT`); edit them before use (see [`tests/README.md`](tests/README.md)).

@@ -37,17 +37,13 @@ Bring-up turned up a few things worth knowing **before you build one**:
   see [`docs/ERRATA.md`](docs/ERRATA.md#e11-most-front-panel-leds-read-inverted).
   Also **check the LED order at assembly** (two LEDs were swapped on the tested unit).
 - The design-stage "all pins match the firmware" check missed signal direction and LED
-  polarity; ten firmware and design issues were found and eight fixed in firmware during
-  qualification (the LED inversion of five LEDs needs a hardware change, and a fresh-boot
-  RTS/CTS stall remains open) - see
+  polarity; nine firmware and design issues were found and eight fixed in firmware during
+  qualification (the LED inversion of five LEDs needs a hardware change) - see
   [`docs/ERRATA.md`](docs/ERRATA.md#e3-earlier-pin-cross-check-missed-signal-direction) and
   [`docs/QUALIFICATION.md`](docs/QUALIFICATION.md).
 - **Use RTS/CTS for long transfers.** With flow control off, a long full-speed two-way stream
   can still lose data (the receive-buffer bug behind most of that is fixed in firmware v6b) -
   see [`docs/ERRATA.md`](docs/ERRATA.md#e12-serial-receive-buffer-was-256-bytes-not-4096-fixed-in-firmware-v6b).
-- **On a fresh boot, a low PC RTS line stops the modem answering at all** until `AT&K3` is issued
-  once - open issue, six firmware-level fix attempts failed - see
-  [`docs/ERRATA.md`](docs/ERRATA.md#e13-on-a-fresh-boot-a-low-pc-rts-line-stops-the-modem-answering-at-all-open-issue).
 
 This is a functional qualification of a single unit, not a compliance test.
 Expect further revisions.

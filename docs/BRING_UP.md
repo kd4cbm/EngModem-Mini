@@ -147,3 +147,4 @@ RTS/CTS pin roles for this board).
 | Terminal hangs after enabling `AT&K3` | The PC/cable is not driving RTS or honouring CTS; use `AT&K0`, or check DE-9 pins 7/8. |
 | No serial after `ATB<rate>` | The terminal must be changed to the new rate too (the `OK` is already sent at the new rate). |
 | Cannot flash | Use a data-capable USB cable; fit J9, pulse J10 or power-cycle, flash, then remove J9. |
+| Unexpected/inconsistent serial port behaviour that doesn't match any symptom above | Try a full device wipe (`esptool erase-flash`) and reflash before assuming a hardware fault - this has resolved otherwise-unexplained cases. |

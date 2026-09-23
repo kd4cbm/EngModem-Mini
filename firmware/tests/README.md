@@ -9,7 +9,6 @@ must edit them for your setup:
 | What | Where | As run |
 |---|---|---|
 | Modem serial port (J12 / DE-9) | `QA_PORT` environment variable (default in `qa_common.py`) | `COM15` (also run on the motherboard's native `COM1`) |
-| Programming/reset port (`qa_freshboot_rts.py` only, resets the board via esptool) | `ESPTOOL_PORT` environment variable | `COM7` |
 | Debug UART port (J7) | `serial.Serial("COM5", ...)` in `qa_dtr2.py`, `qa_dcd.py` | `COM5` |
 | PC's LAN address (TCP tests, modem dials the PC) | `PC_IP` in `qa_dcd.py`, `qa_dtrhangup.py`, `qa_latency.py`, `qa_pace_noecho.py`, `qa_stream2.py` (`qa_losscurve.py` runs `qa_stream2.py`) | `192.168.1.140` |
 | Modem's LAN address (incoming-call test) | `MODEM_IP` in `qa_ri.py` | `192.168.1.149` |
@@ -25,7 +24,6 @@ Close any terminal program first - the scripts need exclusive use of the port.
 | Script | Covers | Checks |
 |---|---|---|
 | `rtscts_verify.py` | Idle line levels; modem holds output while PC RTS is low and releases it; modem drops CTS when its RX buffer fills and recovers | 14 |
-| `qa_freshboot_rts.py` | Regression test for [ERRATA E13](../../docs/ERRATA.md#e13-on-a-fresh-boot-a-low-pc-rts-line-stops-the-modem-answering-at-all-open-issue): resets the board (needs `ESPTOOL_PORT`) and checks whether the modem answers with PC RTS low on a genuinely virgin boot. As of v7-rev1 that one check is **expected to fail** - it exists to prove a future fix attempt actually works | 5 (1 expected-fail) |
 | `qa_sweep.py` | Baud sweep 300-921600: AT answers, RTS holds/releases output at each rate. Rates the PC port rejects (a native 16550 tops out at 115200) are skipped and listed, so the modem is never switched to a speed the PC cannot follow | 50 (38 on a 115200-limited port) |
 | `qa_ctsoff.py` | PC-side CTS stays asserted across `AT&K3`/`AT&K0` cycles | 13 |
 | `qa_dtr2.py` | DTR and RTS input paths, read from the firmware's own `AT&O88` signal log on the debug UART | prints the `DCRSTOI` bits |

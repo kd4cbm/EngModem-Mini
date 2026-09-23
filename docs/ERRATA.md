@@ -182,38 +182,6 @@ push in both directions at once - no buffer size fixes that. **Use RTS/CTS (`AT&
 An occasional "one byte short on the echo return" in flow-off echo runs was also seen before the fix and
 has an unknown cause.
 
-### E13. On a fresh boot, a low PC RTS line stops the modem answering at all (open issue)
-
-With flow control at its default (**off**) and the PC's RTS line **low**, a genuinely fresh boot
-(never touched `AT&K3` yet) gives **zero response**, not just a slow one - tested to 20+ seconds
-with nothing coming back. Either of these clears it for the rest of that boot session: raising RTS
-once (the modem then answers in about 30 ms), or issuing a real `AT&K3` followed by `AT&K0` from a
-terminal. Reproduced identically on `firmware-v4-rev1`, `firmware-v6b-rev1` and `firmware-v7-rev1` -
-pre-existing, not something v7 introduced or fixed. Also reproduced byte-for-byte through the PC's
-native 16550 UART (**COM1**), not just a USB-serial (FTDI) adapter, ruling out the USB-serial
-interface as the cause - this sits on the modem board's side.
-
-**Workaround:** make sure your terminal/cable asserts RTS on connect (most do by default), or send
-`AT&K3` then `AT&K0` once after a fresh boot before relying on flow-control-off behaviour.
-
-**Why this is a real risk:** a terminal, OS, or cable that doesn't proactively assert RTS (plausible -
-many don't manage handshaking lines unless flow control is turned on) would make a freshly booted,
-correctly wired board look completely dead.
-
-**Investigation so far:** six firmware-only approaches were tried and disproven on real hardware,
-including binding the CTS pin's GPIO Matrix routing earlier, priming hardware flow control on/off
-during `setup()`/reset in several orderings, and reactively re-running the same working `AT&K3`/`AT&K0`
-sequence the moment the first serial byte is received after boot. All failed identically, including
-the first-byte approach even when the very first byte sent was the one meant to trigger it - meaning
-the byte never reached the firmware's dispatch loop at all while RTS was low. Cross-checked against
-the ESP32-S3 ESP-IDF v5.5.5 source (`uart_ll_set_hw_flow_ctrl()`): the register write that disables
-hardware flow control is unconditional and deterministic, which doesn't obviously explain a stall on
-its own. The evidence points toward a gate below what the firmware can see or reach - most likely
-something in the UART peripheral's RX path that a plain `uart_set_hw_flow_ctrl(..., DISABLE)` call
-doesn't fully undo until one real hardware-flow-control cycle has run - rather than anything a future
-firmware-only fix from this angle is likely to solve. Not pursued further without new information
-(e.g. a scope/meter reading on the CTS-input pin at the moment of the stall).
-
 ## Suggestions for a future revision (not commitments)
 
 - Add pull resistors (or solder-jumper defaults) for J4/J5/J8 so a missing
