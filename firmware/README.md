@@ -10,16 +10,16 @@ status display, further specialised for this board with the
 `ENGMODEM_MINI_BOARD` build flag (already `#define`d near the top of
 `zimodem/zimodem.ino`).
 
-**Revision:** `firmware-v6b-rev1` - Zimodem 4.0.3 base, sdk v5.5.5,
+**Revision:** `firmware-v7-rev1` - Zimodem 4.0.3 base, sdk v5.5.5,
 ESP32 Arduino core 3.3.11. Every change from upstream is listed in
-[`CHANGES.md`](CHANGES.md); the numbered fix rounds (v1 to v6b) are listed
+[`CHANGES.md`](CHANGES.md); the numbered fix rounds (v1 to v7) are listed
 there too. Apache-2.0, see [`LICENSE`](LICENSE) and [`NOTICE`](NOTICE) (the
 *hardware* in the rest of this repo is CERN-OHL-S v2).
 
 | Folder / file | What it is |
 |---|---|
 | [`zimodem/`](zimodem/) | Arduino sketch source (`zimodem.ino` + tabs, bundled `src/libssh2`) |
-| [`bin/`](bin/) | The exact binaries flashed and qualified on the board (v6b-rev1), with `SHA256SUMS.txt` |
+| [`bin/`](bin/) | The exact binaries flashed and qualified on the board (v7-rev1), with `SHA256SUMS.txt` |
 | [`tests/`](tests/) | The Python hardware QA scripts used for qualification |
 | [`PIN_MAP.md`](PIN_MAP.md) | ESP32-S3 GPIO to signal mapping this firmware expects |
 | [`CHANGES.md`](CHANGES.md) | Full change list vs. upstream, with the reason for each |

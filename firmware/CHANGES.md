@@ -173,6 +173,15 @@ this flag is defined.
   A "1 byte short on the echo return" also appears occasionally in flow-off echo runs; it was present in
   v5-rev1 baselines too and its cause is not known.
 
+- **SSH sessions always requested a PTY with TERM="vanilla" (v7).** `AT&S41=<termtype>` sets a
+  global (`termType`) that the Telnet path (`pet2asc.ino`) correctly sends in its TERMTYPE option
+  negotiation, but `wifisshclient.ino`'s `libssh2_channel_request_pty()` call passed the literal
+  string `"vanilla"` instead - a leftover placeholder with no meaning to libssh2 or the SSH protocol,
+  so the configured term type never reached an SSH host. Found by inspection, confirmed with a local
+  test SSH server that logs the pty-req TERM value it receives: before this fix every SSH session
+  arrived as `vanilla` regardless of `AT&S41`; after, it matches. Telnet was unaffected either way.
+  One-line fix: pass `termType.c_str()` instead of the literal.
+
 ## New: 24x2 character VFD status display
 
 Entirely new files, `vfd.h` / `vfd.ino`. Drives a Noritake CU24025ECPB-W1J (24x2)

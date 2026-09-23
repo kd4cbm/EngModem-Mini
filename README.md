@@ -15,7 +15,7 @@ hardware, further specialised for it, is included in [`firmware/`](firmware/).
 ## Status: Rev5 built and functionally qualified
 
 One Rev5 board has been built, brought up and bench-qualified with the firmware
-in [`firmware/`](firmware/) (revision `firmware-v6b-rev1`), September 2026:
+in [`firmware/`](firmware/) (revision `firmware-v7-rev1`), September 2026:
 programming over USB, boot and debug UART, WiFi, microSD, the VFD, the status
 LEDs, RS-232 at every rate from 300 to 921600 baud, RTS/CTS flow control, DTR,
 DCD and RI, and byte-exact data integrity through TCP connections. The full
