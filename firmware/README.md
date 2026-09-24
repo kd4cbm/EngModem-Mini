@@ -111,6 +111,15 @@ released binaries and their checksums are included.
 
 ## Known limits of this revision
 
+- **Recommended baud rate: 230400 if your UART can do it, otherwise 115200.** 115200 is the rate any
+  UART supports, including plain onboard PC ports (the native 16550 COM port used in qualification
+  topped out there). 230400 is the fastest rate we can guarantee, and only on UARTs that accept custom
+  rates above 115200 (typically USB-serial adapters); not every such adapter supports 460800 or
+  921600. Going faster buys little: connected-mode throughput is flat at ~17.3-17.9 KB/s from 230400
+  through 921600 (WiFi/CPU-bound, not line-bound), and one-way transfers plateau near 30.8 KB/s from
+  460800 up. If your UART accepts custom rates you can likely exceed 230400 by a decent margin, but
+  that is not guaranteed on all hardware. The modem itself ran byte-exact at 460800 and 921600 on the
+  USB-FTDI adapter used in qualification.
 - **Flow control off has a ceiling.** With RTS/CTS off and data flowing in *both* directions
   at full 115200 line rate for a long time (tested with a PC echo server), the modem forwards slightly
   slower than a full-speed sender can push, so a very long stream can still lose data. Measured on the
