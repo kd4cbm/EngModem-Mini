@@ -1,23 +1,24 @@
-// EngModem Mini (Rev5) - front-panel LED position test
+// EngModem Mini (Rev5) - front-panel LED polarity/position confirmation test
 //
 // Steps through the 8 LEDs in the order the DESIGN says they sit, left to right,
-// blinking each one for 3 seconds while the VFD shows:
-//   row 1: "Position N of 8"  (+ ON/OFF for driven LEDs, or the live pin level)
+// lighting each one steadily for 5 seconds while the VFD shows:
+//   row 1: "Pos N/8 D<designator>  ON/OFF"  (or the live pin level for hardware-driven slots)
 //   row 2: the LED's label and function
-// You watch which physical LED blinks and compare it with position N.
+// You watch which physical LED lights and compare it with the position/designator shown.
 //
 // LED wiring facts used here (from the Rev5 netlist; every LED lights when its
 // drive signal is HIGH - anode -> resistor -> signal, cathode -> GND):
 //   Direct GPIO : HS = GPIO11, AA = GPIO10, OH = GPIO12
-//   Via U4 (74HCT245, non-inverting): the LED follows a TTL signal net
+//   Via U4 (now a CD74HCT640, inverting): the LED follows a TTL signal net
 //     MR = /TTL-DSR  (GPIO7,  ESP output)  -> can be driven
 //     SD = /TTL-TXD  (GPIO16, ESP output)  -> can be driven
 //     CD = /TTL-DCD  (GPIO5,  ESP output)  -> can be driven
 //     TR = /TTL-DTR  (GPIO4,  driven by the MAX3237 from the PC's DTR)  -> NOT driven
 //     RD = /TTL-RXD  (GPIO15, driven by the MAX3237 from the PC's TXD)  -> NOT driven
 // TR and RD nets are OUTPUTS of the MAX3237, so the ESP must not fight them: those
-// two pins are left as inputs and their slots only show the live pin level.
-// They stay lit (idle high) unless the PC asserts DTR / sends data, so:
+// two pins are left as inputs and their slots only show the live pin level, same as
+// before the U4 swap - replacing U4 does not change which nets are ESP outputs vs
+// MAX3237 outputs, only the polarity of the ones the ESP does drive.
 //   - open a terminal on the modem COM port: TR (DTR) goes OFF
 //   - type characters in it: RD flickers
 //
@@ -26,10 +27,11 @@
 
 #include <Arduino.h>
 
-// Set to 1 AFTER U4 (74HCT245) has been replaced with an inverting buffer such as the 74HCT640: the LEDs
-// that go through U4 (MR, TR, SD, RD, CD) then light when the ESP32 pin is LOW. (Untested on hardware -
-// written for the planned swap; direct-drive LEDs OH, AA and HS are never affected.)
-#define U4_INVERTING 0
+// U4 (74HCT245) has been replaced with an inverting CD74HCT640: the LEDs that go through U4
+// (MR, TR, SD, RD, CD) now light when the ESP32 pin is LOW. This is the first hardware
+// confirmation of that swap - if MR/SD/CD light in the wrong sense here, the swap did not
+// behave as the datasheet predicted.
+#define U4_INVERTING 1
 
 // --- VFD (same pins and init sequence as the real firmware, vfd.ino) ---
 #define VFD_RS  42
@@ -84,22 +86,22 @@ struct Led {
   Kind kind;
   const char *sigName;    // shown for HW_INPUT slots
   bool viaU4;             // true if the LED is fed through U4 (affected by U4_INVERTING)
+  const char *designator; // PCB silkscreen reference (D8..D1, left to right)
 };
 static const Led LEDS[8] = {
-  { "MR - Modem Ready (DSR)",  7,  DRIVEN,   "",     true  },
-  { "TR - Term. Ready (DTR)",  4,  HW_INPUT, "DTR",  true  },
-  { "SD - Send Data (TXD)",    16, DRIVEN,   "",     true  },
-  { "RD - Recv Data (RXD)",    15, HW_INPUT, "RXD",  true  },
-  { "OH - Off Hook",           12, DRIVEN,   "",     false },
-  { "CD - Carrier Det (DCD)",  5,  DRIVEN,   "",     true  },
-  { "AA - Auto Answer",        10, DRIVEN,   "",     false },
-  { "HS - High Speed",         11, DRIVEN,   "",     false },
+  { "MR - Modem Ready (DSR)",  7,  DRIVEN,   "",     true,  "D8" },
+  { "TR - Term. Ready (DTR)",  4,  HW_INPUT, "DTR",  true,  "D7" },
+  { "SD - Send Data (TXD)",    16, DRIVEN,   "",     true,  "D6" },
+  { "RD - Recv Data (RXD)",    15, HW_INPUT, "RXD",  true,  "D5" },
+  { "OH - Off Hook",           12, DRIVEN,   "",     false, "D4" },
+  { "CD - Carrier Det (DCD)",  5,  DRIVEN,   "",     true,  "D3" },
+  { "AA - Auto Answer",        10, DRIVEN,   "",     false, "D2" },
+  { "HS - High Speed",         11, DRIVEN,   "",     false, "D1" },
 };
 
-#define SLOT_MS   3000UL
-#define BLINK_MS  250UL       // 2 Hz blink, so a driven LED is distinguishable from a steady one
+#define SLOT_MS   5000UL      // steady-on duration per LED
 
-// Light or darken a driven LED, allowing for an inverting U4.
+// Light or darken a driven LED, allowing for the inverting U4 replacement.
 static void drive(int idx, bool on) {
   bool level = on;
   if (LEDS[idx].viaU4 && U4_INVERTING) level = !level;
@@ -114,9 +116,9 @@ static void allDrivenOff() {
 static void show(int idx, bool on) {
   char r1[VFD_COLS + 1];
   if (LEDS[idx].kind == DRIVEN)
-    snprintf(r1, sizeof r1, "Position %d of 8  %s", idx + 1, on ? "ON " : "OFF");
+    snprintf(r1, sizeof r1, "Pos %d/8 %s  %s", idx + 1, LEDS[idx].designator, on ? "ON " : "OFF");
   else
-    snprintf(r1, sizeof r1, "Position %d of 8  %s:%c", idx + 1, LEDS[idx].sigName,
+    snprintf(r1, sizeof r1, "Pos %d/8 %s  %s:%c", idx + 1, LEDS[idx].designator, LEDS[idx].sigName,
              digitalRead(LEDS[idx].pin) ? 'H' : 'L');
   vfdRow(0, r1);
   vfdRow(1, LEDS[idx].row2);
@@ -143,24 +145,22 @@ void setup() {
   pinMode(18, OUTPUT); digitalWrite(18, LOW);    // RTS asserted (PC's CTS)
   pinMode(17, INPUT);                            // CTS-in (PC's RTS)
 
-  Serial0.println("\r\nEngModem Mini LED position test - watch the front panel, left to right");
+  Serial0.println("\r\nEngModem Mini LED polarity/position test - watch the front panel, left to right");
 }
 
 void loop() {
   vfdSequence();                               // re-send init each round in case the first was missed
-  vfdRow(0, "LED position test"); vfdRow(1, "Watch left to right");
+  vfdRow(0, "LED polarity test"); vfdRow(1, "Watch left to right");
   allDrivenOff();
   delay(2000);
 
   for (int i = 0; i < 8; i++) {
-    Serial0.printf("Position %d: %s\r\n", i + 1, LEDS[i].row2);
+    Serial0.printf("Position %d (%s): %s\r\n", i + 1, LEDS[i].designator, LEDS[i].row2);
+    if (LEDS[i].kind == DRIVEN) drive(i, true);
     uint32_t start = millis();
-    bool on = false;
     while (millis() - start < SLOT_MS) {
-      on = !on;
-      if (LEDS[i].kind == DRIVEN) drive(i, on);
-      show(i, on);                             // refreshed every 250 ms (also recovers a lost write)
-      delay(BLINK_MS);
+      show(i, true);                            // refreshed periodically (also recovers a lost write)
+      delay(250);
     }
     allDrivenOff();
   }
