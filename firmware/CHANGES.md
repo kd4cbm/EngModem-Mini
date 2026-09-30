@@ -131,9 +131,11 @@ this flag is defined.
   panel with the design: at idle the panel showed MR off, TR on, SD on, RD on, OH on, CD on, AA on,
   HS off. Under `ENGMODEM_MINI_BOARD` the AA/HS/OH active levels are now HIGH. All writes to these
   pins go through the `DEFAULT_*_ACTIVE/INACTIVE` constants, so every code path flips together.
-  The other five LEDs (MR TR SD RD CD) are driven through U4, a non-inverting 74HCT245, from
-  active-LOW modem signals; their inversion is a hardware matter (planned fix: replace U4 with an
-  inverting 74HCT640, pin-compatible) and is not changed by firmware.
+  The other five LEDs (MR TR SD RD CD) are driven through U4 from active-LOW modem signals; their
+  inversion was a hardware matter and not something firmware could change.
+  **Update (2026-09-29):** U4 has since been hand-swapped from the original non-inverting 74HCT245 to
+  a pin-compatible inverting TI CD74HCT640M and verified on hardware - see
+  [`../docs/ERRATA.md`](../docs/ERRATA.md#e11-most-front-panel-leds-read-inverted).
 - **VFD initialisation made robust against warm resets (v5).** On the real board the display came
   up scrambled after ESP32 resets (the VFD stays powered through them): in a rotation test the v4
   init scrambled roughly half of warm resets, while a resync-first init, a resync init re-sent once

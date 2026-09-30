@@ -1,11 +1,12 @@
 # Front panel LED labels - CNC engraving plan (draft)
 
 > **Note on what the labels mean electrically (added after bring-up):** every LED lights when its drive
-> signal is HIGH, and five of them (MR, TR, SD, RD, CD) go through a non-inverting buffer from active-low
-> signals, so on Rev5 as built they read inverted (for example CD is lit when there is *no* carrier). The
-> labels below name the *function*, which is unaffected, but see
-> [`../docs/ERRATA.md`](../docs/ERRATA.md#e11-most-front-panel-leds-read-inverted) before deciding what
-> lit/dark should mean on your panel. The left-to-right order was confirmed on the built unit.
+> signal is HIGH, and five of them (MR, TR, SD, RD, CD) go through a buffer (U4) from active-low signals.
+> On boards with the originally-fitted non-inverting 74HCT245 these five read inverted (for example CD lit
+> when there is *no* carrier); with U4 hand-swapped to the inverting TI CD74HCT640M (verified 2026-09-29,
+> see [`../docs/ERRATA.md`](../docs/ERRATA.md#e11-most-front-panel-leds-read-inverted)), they read
+> correctly. The labels below name the *function*, which is unaffected either way. The left-to-right
+> order was confirmed on the built unit.
 
 **Preliminary - not yet cut.** Positions are derived directly from the
 front panel drill guide's own geometry (`build_jig1_vfd_drill.py`), not
@@ -17,7 +18,7 @@ recommendations, not yet verified by a physical test cut.
 The 3mm THT LEDs sit at a fixed 15.625mm pitch (125mm VFD width / 8),
 evenly spaced under the VFD window. Only 3 of the 8 LEDs had a documented
 function before this (`LED-AA`, `LED-HS`, `LED-OH` net labels in the
-schematic) - the other 5 route through U4 (a 74HCT245 buffer) from real
+schematic) - the other 5 route through U4 (a bus buffer/transceiver) from real
 RS-232/TTL signals with no descriptive net name of their own. Traced via
 `pcbnew` (each LED's anode -> series resistor -> either a named net or a
 U4 output pin -> matched to U4's real input pin on the same physical
@@ -27,12 +28,12 @@ confirmation the trace is right, not the reason it was chosen.
 
 | Position (L->R) | Label | Real signal | Driven via |
 |---|---|---|---|
-| 1 | **MR** | DSR (Modem Ready) | U4 (74HCT245) |
-| 2 | **TR** | DTR (Terminal Ready) | U4 (74HCT245) |
-| 3 | **SD** | TXD (Send Data) | U4 (74HCT245) |
-| 4 | **RD** | RXD (Receive Data) | U4 (74HCT245) |
+| 1 | **MR** | DSR (Modem Ready) | U4 (CD74HCT640M) |
+| 2 | **TR** | DTR (Terminal Ready) | U4 (CD74HCT640M) |
+| 3 | **SD** | TXD (Send Data) | U4 (CD74HCT640M) |
+| 4 | **RD** | RXD (Receive Data) | U4 (CD74HCT640M) |
 | 5 | **OH** | Off-Hook | direct GPIO (GPIO12) |
-| 6 | **CD** | DCD (Carrier Detect) | U4 (74HCT245) |
+| 6 | **CD** | DCD (Carrier Detect) | U4 (CD74HCT640M) |
 | 7 | **AA** | Auto-Answer | direct GPIO (GPIO10) |
 | 8 | **HS** | High-Speed | direct GPIO (GPIO11) |
 

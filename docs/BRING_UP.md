@@ -99,8 +99,9 @@ RTS/CTS pin roles for this board).
   after boot; if it is ever missed the display stays blank until the next reset.
 - **LEDs**: left to right on the front panel MR, TR, SD, RD, OH, CD, AA, HS -
   see [`enclosure/LED_LABELS.md`](../enclosure/LED_LABELS.md) for what each
-  one is wired to. Five are driven by RS-232/TTL signals through the 74HCT245
-  (U4); OH, AA and HS are direct GPIOs (12, 10, 11). **Check the order at
+  one is wired to. Five are driven by RS-232/TTL signals through U4 (a
+  CD74HCT640M as of 2026-09-29; originally a 74HCT245 - see ERRATA E11);
+  OH, AA and HS are direct GPIOs (12, 10, 11). **Check the order at
   assembly** with [`tools/led_position_test/`](../tools/led_position_test/): on the
   tested unit two LEDs had been fitted swapped. **Expect an inverted-looking panel
   on Rev5 as built** - MR, TR, SD, RD and CD go through U4 from active-low signals

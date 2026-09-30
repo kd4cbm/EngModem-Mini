@@ -120,34 +120,42 @@ qualification.)
 
 All eight front-panel LEDs are wired anode -> resistor -> drive signal, cathode -> GND, so each lights
 when its signal is **HIGH**. But DCD, DSR and DTR are asserted LOW and a serial line idles HIGH, so on
-Rev5 as built:
+Rev5 **as originally built** (U4 = 74HCT245, non-inverting):
 
 - **OH, AA, HS** (driven directly by GPIO) were inverted in the firmware too. **Fixed in firmware v5**:
   they now light when active.
 - **MR, TR, SD, RD, CD** go through U4, a non-inverting 74HCT245, from those active-low signals, so they
   read inverted **in hardware**. Firmware cannot change this.
 
-Idle at 115200, terminal not asserting DTR, no connection - what the panel shows with firmware v5 or later
-on Rev5 as built:
+Idle at 115200, terminal not asserting DTR, no connection - what the panel showed with firmware v5 or
+later, before the U4 swap below:
 
 | MR | TR | SD | RD | OH | CD | AA | HS |
 |---|---|---|---|---|---|---|---|
 | off | on | on | on | off | on | off | on |
 
-So MR is dark when the modem is ready, CD is lit when there is **no** carrier, and SD/RD are lit at idle
-and go dark during data (the opposite of a classic modem panel).
+So MR was dark when the modem was ready, CD was lit when there was **no** carrier, and SD/RD were lit at
+idle and went dark during data (the opposite of a classic modem panel).
 The tested unit's panel was observed exactly like this before the firmware fix (OH on, AA on, HS off at
 idle), which is how the problem was found. The design-stage checks verified which signal feeds each LED
 but never its active level.
 
-**Planned fix (not yet done or verified on hardware):** replace U4 with a pin-compatible **inverting**
-octal bus transceiver. The TI **CD74HCT640M** (SOIC-20 wide, same package and pinout; with DIR tied high
-and OE low, as on this board, B = NOT A) is the candidate, checked against its datasheet only - stock was
-not checked, and it must be the **HCT** version (the HC version does not meet the 3.3 V input threshold
-at 5 V). It is a single hand-soldered part swap with no other change. After it, at idle: MR on, HS on,
-everything else dark, with TR lighting when a terminal asserts DTR, OH and CD on a connection, AA with a
-listener, and SD/RD flashing with data. Until someone has done and verified the swap, treat this as a
-proposal. The tested unit's LED **order** (below) was verified physically.
+**Fix (done and verified on hardware, 2026-09-29):** U4 was replaced with a pin-compatible **inverting**
+octal bus transceiver, the TI **CD74HCT640M** (SOIC-20-300mil / 7.5x12.8mm, same package and pinout; with
+DIR tied high and OE low, as on this board, B = NOT A). It must be the **HCT** version (the HC version
+does not meet the 3.3 V input threshold at 5 V). Sourced via LCSC, part **C1548168** - 0 units in LCSC's
+own direct stock at last check, but ~3,000 available through LCSC's "Other Suppliers" channel at a 9-18
+business day lead time (checked 2026-09-29; re-check before ordering). It is a single hand-soldered part
+swap with no other change to the board - on the tested unit a pad was pulled during desoldering and
+needed a trace/pad-level repair, worth planning for if you attempt this yourself.
+
+Verified afterward with [`../tools/led_position_test/`](../tools/led_position_test/) (updated to drive TR
+and RD for real from the PC side - DTR toggling and realistic bursty serial traffic - rather than only
+showing their live pin level): **MR, SD and CD now light correctly** during their driven slot, matching
+the datasheet prediction. At idle: MR on, HS on, everything else dark, with TR lighting when a terminal
+asserts DTR, OH and CD on a connection, AA with a listener, and SD/RD flashing with data - the panel now
+reads like a classic modem panel. The tested unit's LED **order** (below) was verified physically and is
+unaffected by the U4 swap.
 
 **Check LED order at assembly.** Left to right the panel should read MR, TR, SD, RD, OH, CD, AA, HS. On
 the tested unit the LEDs at positions 3 and 4 had been fitted in swapped positions and had to be
@@ -190,6 +198,7 @@ has an unknown cause.
   solder-jumper to pick either order, or provide a DE-9 directly on the board.
 - Add test points on the 5 V, 3.3 V and GND rails.
 - Silkscreen J7 pins 3/4 as `DBG TX/RX`.
-- Replace U4 (74HCT245) with a pin-compatible inverting part (candidate: 74HCT640) in the design, so all
-  eight LEDs read correctly; and check active levels, not only connectivity, when auditing LED/signal paths.
+- Spec U4 as the inverting TI CD74HCT640M by default (confirmed fix, see E11 above), rather than the
+  original 74HCT245, so a fresh build reads all eight LEDs correctly without a field hand-swap; and check
+  active levels, not only connectivity, when auditing LED/signal paths.
 - Pull-downs on the VFD's E and RS lines (see E8).

@@ -1,0 +1,6 @@
+# Build artifacts from compiling the firmware or tools/led_position_test locally
+build/
+
+# Python bytecode cache from running the firmware/tests QA scripts
+__pycache__/
+*.pyc

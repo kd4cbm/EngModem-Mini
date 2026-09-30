@@ -30,10 +30,10 @@ Bring-up turned up a few things worth knowing **before you build one**:
 - **Three MAX3237 jumpers (J4/J5/J8) must be fitted** - see the jumper table in
   [`docs/BRING_UP.md`](docs/BRING_UP.md#3-set-the-jumpers).
 - U3/U5 are hand-soldered and U5 was substituted - see [`docs/ERRATA.md`](docs/ERRATA.md).
-- **Most front-panel LEDs read inverted.** MR, TR, SD, RD and CD go through U4, a
-  non-inverting buffer, from active-low signals, so on Rev5 as built they are lit when
-  they should be dark. The firmware corrects OH, AA and HS; a pin-compatible inverting
-  part in place of U4 is the proposed fix for the rest (**not yet built or verified**) -
+- **Most front-panel LEDs read inverted on boards with the original U4.** MR, TR, SD, RD and CD go
+  through U4, originally a non-inverting buffer, from active-low signals, so they were lit when they
+  should be dark. The firmware corrects OH, AA and HS; replacing U4 with a pin-compatible inverting
+  part (a TI CD74HCT640M) fixes the rest and has been **built and verified on hardware** -
   see [`docs/ERRATA.md`](docs/ERRATA.md#e11-most-front-panel-leds-read-inverted).
   Also **check the LED order at assembly** (two LEDs were swapped on the tested unit).
 - The design-stage "all pins match the firmware" check missed signal direction and LED
@@ -98,9 +98,11 @@ before opening the project:
 - **MAX3237** - U1's symbol/footprint
 
 The project's one genuinely custom dependency, a small `RetroWiFiModem`
-library providing the 74HCT245 symbol and its SOIC-20W footprint, is
-bundled under [`hardware/kicad/libraries/`](hardware/kicad/libraries/)
-and wired up via the project-local `sym-lib-table`/`fp-lib-table`, so it
+library providing the SOIC-20W bus-transceiver symbol/footprint used at U4
+(both the original 74HCT245 and the CD74HCT640M it was replaced with share
+the symbol's underlying pinout), is bundled under
+[`hardware/kicad/libraries/`](hardware/kicad/libraries/) and wired up via
+the project-local `sym-lib-table`/`fp-lib-table`, so it
 resolves automatically - no separate install needed for that one.
 
 ## RS-232 (J12) - DE-9 female, DCE pinout
@@ -146,7 +148,7 @@ below) is in [`PIN_MAP.md`](PIN_MAP.md); a running changelog is in
   capacitors) intentionally list full specs with no pinned LCSC number -
   JLCPCB's basic-parts catalog is a live, dynamic search that isn't
   reliably scriptable, and these are common enough values that matching
-  one at checkout takes seconds. **U3 and U5 are intentionally excluded**
+  one at checkout takes seconds. **U3, U4 and U5 are intentionally excluded**
   - see below.
 - [`manufacturing/BOM_full.csv`](manufacturing/BOM_full.csv) - every part
   on the board, including the through-hole connectors, headers, LED
@@ -155,7 +157,7 @@ below) is in [`PIN_MAP.md`](PIN_MAP.md); a running changelog is in
   (component position) file for the JLCPCB-assembled SMD parts, in
   JLCPCB's expected column format (`Designator, Mid X, Mid Y, Layer,
   Rotation`), generated directly from the PCB's real component
-  coordinates. U3 and U5 excluded, same as the PCBA BOM.
+  coordinates. U3, U4 and U5 excluded, same as the PCBA BOM.
 
 Gerbers + BOM_PCBA_JLCPCB + CPL_SMD together are what JLCPCB's PCBA
 (assembly) order flow asks for. **Before ordering, check every SMD part's
@@ -188,6 +190,18 @@ replacement parts to hand-solder instead, sourced from Mouser/DigiKey:
   confirmed via TI's own datasheet: Pin 1=ADJ/GND, Pin 2+Tab=Output, Pin
   3=Input, an exact match to this footprint and the schematic (tab wired
   to Output by design).
+
+### U4 - excluded from PCBA, hand-solder this
+
+Unlike U3/U5, this wasn't a footprint mismatch - the schematic's generic 74HCT245 (non-inverting)
+placed and worked fine, but reads five front-panel LEDs inverted (see
+[`docs/ERRATA.md`](docs/ERRATA.md#e11-most-front-panel-leds-read-inverted)). The fix is a
+pin/package-compatible **inverting** part, TI **CD74HCT640M** (SOIC-20-300mil, same footprint) - hand-swapped
+on the qualified unit and verified correct (2026-09-29; a pad was pulled during desoldering and needed a
+trace/pad-level repair, worth planning for). LCSC **C1548168** - 0 units in LCSC's own direct stock at
+last check, ~3,000 available through LCSC's Other Suppliers channel at a 9-18 business day lead time
+(checked 2026-09-29, re-verify before ordering) - excluded here pending confirmed assembly-line stock.
+Must be the **HCT** variant, not HC (HC doesn't meet the 3.3V input threshold at 5V).
 
 ## Revision history
 
