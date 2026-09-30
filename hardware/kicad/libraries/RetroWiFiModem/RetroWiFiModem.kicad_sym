@@ -5063,6 +5063,63 @@
 		)
 		(embedded_fonts no)
 	)
+	(symbol "CD74HCT640M"
+		(extends "74LS245A")
+		(property "Reference" "U"
+			(at 2.54 14.605 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left bottom)
+			)
+		)
+		(property "Value" "CD74HCT640M"
+			(at 1.27 -14.605 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left top)
+			)
+		)
+		(property "Footprint" ""
+			(at 0 0 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Datasheet" "https://www.ti.com/lit/ds/symlink/cd74hct640.pdf"
+			(at 0 0 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Description" "Inverting octal bus transceiver, 3-state (B = NOT A with DIR high, OE low) - replaces the non-inverting 74HCT245 at U4 to fix front-panel LED polarity, see ERRATA E11"
+			(at 0 0 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(hide yes)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(embedded_fonts no)
+	)
 	(symbol "74LS245"
 		(extends "74LS245A")
 		(property "Reference" "U"

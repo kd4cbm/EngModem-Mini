@@ -98,9 +98,11 @@ before opening the project:
 - **MAX3237** - U1's symbol/footprint
 
 The project's one genuinely custom dependency, a small `RetroWiFiModem`
-library providing the 74HCT245 symbol and its SOIC-20W footprint, is
-bundled under [`hardware/kicad/libraries/`](hardware/kicad/libraries/)
-and wired up via the project-local `sym-lib-table`/`fp-lib-table`, so it
+library providing the SOIC-20W bus-transceiver symbol/footprint used at U4
+(both the original 74HCT245 and the CD74HCT640M it was replaced with share
+the symbol's underlying pinout), is bundled under
+[`hardware/kicad/libraries/`](hardware/kicad/libraries/) and wired up via
+the project-local `sym-lib-table`/`fp-lib-table`, so it
 resolves automatically - no separate install needed for that one.
 
 ## RS-232 (J12) - DE-9 female, DCE pinout
