@@ -86,7 +86,7 @@ Found later (details in section 5 and the errata):
 |---|---|---|---|
 | 6 | VFD init sent once and fragile across ESP32 resets | Display scrambled or blank after about half of warm resets ([E8](ERRATA.md#e8-vfd-could-come-up-scrambled-after-a-reset-fixed-in-firmware-v5)) | v5 |
 | 7 | AA / HS / OH LEDs driven active-low, but wired to light when high | Those three LEDs inverted | v5 (firmware) |
-| 8 | MR / TR / SD / RD / CD read inverted through U4 (non-inverting buffer, active-low signals) | Five LEDs inverted | **not fixed** - planned hardware change ([E11](ERRATA.md#e11-most-front-panel-leds-read-inverted)) |
+| 8 | MR / TR / SD / RD / CD read inverted through U4 (non-inverting buffer, active-low signals) | Five LEDs inverted | **fixed** - U4 hand-swapped to an inverting CD74HCT640M, verified 2026-09-29 ([E11](ERRATA.md#e11-most-front-panel-leds-read-inverted)) |
 | 9 | Modem UART receive buffer never applied (set after `begin()`), so 256 bytes | Flow-off two-way traffic lost data from about 8 KB ([E12](ERRATA.md#e12-serial-receive-buffer-was-256-bytes-not-4096-fixed-in-firmware-v6b)) | v6b |
 
 Defect 1 also exposed a **gap in the earlier design verification** (the "18/18
@@ -153,8 +153,6 @@ The only difference is that the native port accepts nothing above 115200 baud, s
 tested only through the adapter.
 
 ### Still not verified
-- The proposed U4 replacement (an inverting buffer) has **not been built or tested**; the LED behaviour after
-  it is expected, not measured (E11).
 - The v6b test run on the native port was cut short when the cable was moved; the same tests were run in full
   on the USB adapter.
 - All items in "What was not tested" above still apply (no voltage or signal-level measurements, single unit,

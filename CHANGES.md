@@ -3,6 +3,17 @@
 Hardware-side changelog for EngModem Mini. For firmware changes, see
 [`firmware/CHANGES.md`](firmware/CHANGES.md).
 
+## U4 hardware fix: inverting buffer confirmed (2026-09-29)
+
+No PCB/schematic change (the fab files are unchanged; this is a field swap on the built unit). U4
+(74HCT245, non-inverting) was replaced by hand with a TI **CD74HCT640M** (inverting, pin-compatible,
+same SOIC-20-300mil footprint) on the qualified Rev5 unit. A pad was pulled during desoldering and
+needed a trace/pad-level repair - worth planning for if you attempt this yourself. Verified afterward
+with [`tools/led_position_test/`](tools/led_position_test/) (updated to drive TR/RD for real from the
+PC side and confirm the corrected polarity): MR, SD and CD now light correctly. See
+[`docs/ERRATA.md`](docs/ERRATA.md#e11-most-front-panel-leds-read-inverted) (now marked fixed) and
+[`manufacturing/BOM_full.csv`](manufacturing/BOM_full.csv) (U4 updated to the new part).
+
 ## Firmware v6b-rev1 and LED documentation (2026-09)
 
 No design change. Further bring-up on the same Rev5 unit found that most front-panel LEDs read inverted

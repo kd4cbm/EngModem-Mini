@@ -1,6 +1,6 @@
 # LED polarity/position test
 
-A small sketch that lights each front-panel LED in turn, steadily, for 5 seconds while the VFD names it
+A small sketch that lights each front-panel LED in turn, steadily, for 3 seconds while the VFD names it
 and shows its position and PCB designator, so you can confirm the LEDs sit in the right order (left to
 right: **MR, TR, SD, RD, OH, CD, AA, HS** / designators **D8** to **D1**) and light with the correct
 polarity after the U4 replacement (see [`../../docs/ERRATA.md`](../../docs/ERRATA.md#e11-most-front-panel-leds-read-inverted)).
@@ -20,7 +20,7 @@ Each slot shows `Pos N/8 D<n>` and ON/OFF (or the live pin level, for the two sl
 row, and the LED's label and function on the bottom row.
 
 - **MR, SD, OH, CD, AA, HS** are driven by the ESP32, so exactly one of them lights in its slot, steadily,
-  for 5 seconds. If the wrong LED lights, the LEDs are in the wrong physical order.
+  for 3 seconds. If the wrong LED lights, the LEDs are in the wrong physical order.
 - **TR (position 2, D7) and RD (position 4, D5)** are driven by the MAX3237, not the ESP32 - forcing them
   would fight the transceiver - so they are **not driven**. They just stay lit or dark during the test and
   the display shows the live pin level. To identify them: open a terminal on the modem serial port

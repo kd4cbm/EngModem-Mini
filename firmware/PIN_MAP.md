@@ -64,17 +64,18 @@ drive signal is HIGH**.
 
 | LED | Signal | How driven | Note |
 |---|---|---|---|
-| MR | `/TTL-DSR` (GPIO7, output) | via U4 (74HCT245, non-inverting) | DSR is asserted LOW, so MR is dark when ready on Rev5 as built |
+| MR | `/TTL-DSR` (GPIO7, output) | via U4 (CD74HCT640M, inverting) | DSR is asserted LOW; U4 inverts, so MR is lit when ready |
 | TR | `/TTL-DTR` (GPIO4, **input** from the MAX3237) | via U4 | never drive this pin |
-| SD | `/TTL-TXD` (GPIO16) | via U4 | UART idles HIGH, so lit at idle on Rev5 as built |
+| SD | `/TTL-TXD` (GPIO16) | via U4 | UART idles HIGH; U4 inverts, so SD is dark at idle |
 | RD | `/TTL-RXD` (GPIO15, **input** from the MAX3237) | via U4 | never drive this pin |
 | OH | GPIO12 | direct | firmware drives it active-HIGH (v5+) |
-| CD | `/TTL-DCD` (GPIO5) | via U4 | DCD is asserted LOW, so lit when there is no carrier on Rev5 as built |
+| CD | `/TTL-DCD` (GPIO5) | via U4 | DCD is asserted LOW; U4 inverts, so CD is dark when there is no carrier |
 | AA | GPIO10 | direct | firmware drives it active-HIGH (v5+) |
 | HS | GPIO11 | direct | firmware drives it active-HIGH (v5+) |
 
-The five LEDs through U4 read inverted on Rev5 as built; the planned fix is a pin-compatible inverting
-buffer in place of U4. See [`../docs/ERRATA.md`](../docs/ERRATA.md#e11-most-front-panel-leds-read-inverted).
+The five LEDs through U4 now read correctly (U4 was hand-swapped from the originally-fitted
+non-inverting 74HCT245 to a pin-compatible inverting CD74HCT640M, verified on hardware 2026-09-29).
+See [`../docs/ERRATA.md`](../docs/ERRATA.md#e11-most-front-panel-leds-read-inverted).
 
 ## Power regulation - not GPIO-mapped
 

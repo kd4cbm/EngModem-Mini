@@ -1,7 +1,7 @@
 // EngModem Mini (Rev5) - front-panel LED polarity/position confirmation test
 //
 // Steps through the 8 LEDs in the order the DESIGN says they sit, left to right,
-// lighting each one steadily for 5 seconds while the VFD shows:
+// lighting each one steadily for 3 seconds while the VFD shows:
 //   row 1: "Pos N/8 D<designator>  ON/OFF"  (or the live pin level for hardware-driven slots)
 //   row 2: the LED's label and function
 // You watch which physical LED lights and compare it with the position/designator shown.
@@ -99,7 +99,7 @@ static const Led LEDS[8] = {
   { "HS - High Speed",         11, DRIVEN,   "",     false, "D1" },
 };
 
-#define SLOT_MS   5000UL      // steady-on duration per LED
+#define SLOT_MS   3000UL      // steady-on duration per LED
 
 // Light or darken a driven LED, allowing for the inverting U4 replacement.
 static void drive(int idx, bool on) {
